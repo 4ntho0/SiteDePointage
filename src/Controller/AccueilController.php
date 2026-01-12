@@ -9,65 +9,59 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class AccueilController extends AbstractController
-{
-    #[Route('/', name: 'accueil')]
-    public function index(Request $request, EntityManagerInterface $em): Response
-    {
-        if ($request->isMethod('POST')) {
+class AccueilController extends AbstractController {
 
+    #[Route('/', name: 'accueil')]
+    public function index(Request $request, EntityManagerInterface $em): Response {
+        // Définition du fuseau horaire
+        $tz = new \DateTimeZone('Europe/Paris');
+
+        // Début et fin de la journée
+        $start = new \DateTimeImmutable('today', $tz);
+        $end = $start->modify('+1 day');
+
+        // Recherche d'une entrée en cours (sans heure de sortie)
+        $entreeEnCours = $em->getRepository(Pointage::class)
+                ->createQueryBuilder('p')
+                ->where('p.datePointage >= :start')
+                ->andWhere('p.datePointage < :end')
+                ->andWhere('p.heureSortie IS NULL')
+                ->setParameter('start', $start)
+                ->setParameter('end', $end)
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+
+        $hasEntree = $entreeEnCours !== null;
+
+        // Traitement du formulaire
+        if ($request->isMethod('POST')) {
             $type = $request->request->get('type');
 
-            $start = new \DateTimeImmutable('today');
-            $end = $start->modify('+1 day');
-
-            if ($type === 'entrée') {
+            // ENTRÉE
+            if ($type === 'entrée' && !$hasEntree) {
                 $pointage = new Pointage();
-                $pointage->setDatePointage(new \DateTime());
-                $pointage->setHeureEntree(new \DateTime());
+                $now = new \DateTime('now', $tz);
+                $pointage->setDatePointage($now);
+                $pointage->setHeureEntree($now);
                 $pointage->setHeureSortie(null);
 
                 $em->persist($pointage);
             }
 
-            if ($type === 'sortie') {
-                $pointage = $em->getRepository(Pointage::class)
-                    ->createQueryBuilder('p')
-                    ->where('p.datePointage >= :start')
-                    ->andWhere('p.datePointage < :end')
-                    ->setParameter('start', $start)
-                    ->setParameter('end', $end)
-                    ->orderBy('p.id', 'DESC')
-                    ->setMaxResults(1)
-                    ->getQuery()
-                    ->getOneOrNullResult();
-
-                if ($pointage) {
-                    $pointage->setHeureSortie(new \DateTime());
-                }
+            // SORTIE
+            if ($type === 'sortie' && $hasEntree) {
+                $entreeEnCours->setHeureSortie(new \DateTime('now', $tz));
             }
 
             $em->flush();
+
+            // PRG Pattern (évite le double POST)
             return $this->redirectToRoute('accueil');
         }
 
-        // Affichage
-        $start = new \DateTimeImmutable('today');
-        $end = $start->modify('+1 day');
-
-        $pointages = $em->getRepository(Pointage::class)
-            ->createQueryBuilder('p')
-            ->where('p.datePointage >= :start')
-            ->andWhere('p.datePointage < :end')
-            ->setParameter('start', $start)
-            ->setParameter('end', $end)
-            ->orderBy('p.id', 'DESC')
-            ->setMaxResults(5)
-            ->getQuery()
-            ->getResult();
-
         return $this->render('pages/accueil.html.twig', [
-            'pointages' => $pointages
+                    'hasEntree' => $hasEntree,
         ]);
     }
 }

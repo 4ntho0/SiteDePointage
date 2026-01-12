@@ -87,15 +87,25 @@
             <div class="heure" id="heure">08:42:15</div>
 
             <div class="actions">
-                <form method="post" style="flex:1">
-                    <input type="hidden" name="type" value="entrée">
-                    <button class="btn btn-entree" type="submit">Embauche</button>
-                </form>
 
-                <form method="post" style="flex:1">
-                    <input type="hidden" name="type" value="sortie">
-                    <button class="btn btn-sortie" type="submit">Débauche</button>
-                </form>
+                {% if not hasEntree %}
+                    <form method="post" style="flex:1">
+                        <input type="hidden" name="type" value="entrée">
+                        <button class="btn btn-entree" type="submit">
+                            Embauche
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if hasEntree %}
+                    <form method="post" style="flex:1">
+                        <input type="hidden" name="type" value="sortie">
+                        <button class="btn btn-sortie" type="submit">
+                            Débauche
+                        </button>
+                    </form>
+                {% endif %}
+
             </div>
 
             <p class="info">
