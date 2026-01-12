@@ -82,9 +82,9 @@
             <h2>Pointage</h2>
 
             <p class="user">Anthony M</p>
-            <p class="date">Mardi 9 janvier 2026</p>
+            <p class="date" id="date">00/00/0000</p>
 
-            <div class="heure" id="heure">08:42:15</div>
+            <div class="heure" id="heure">00:00:00</div>
 
             <div class="actions">
 
@@ -115,6 +115,22 @@
     </div>
 
     <script>
+        function updateDate() {
+            const now = new Date();
+
+            // Options pour formater la date en français
+            const options = {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'};
+
+            // toLocaleDateString avec 'fr-FR' pour le français
+            const dateString = now.toLocaleDateString('fr-FR', options);
+
+            // Met à jour le contenu du <p>
+            document.getElementById('date').innerText = dateString.charAt(0).toUpperCase() + dateString.slice(1);
+        }
+
+        // Mise à jour immédiate
+        updateDate();
+
         function updateTime() {
             const now = new Date();
             document.getElementById("heure").innerText =
@@ -122,6 +138,8 @@
         }
         setInterval(updateTime, 1000);
         updateTime();
+
+
     </script>
 
 {% endblock %}
