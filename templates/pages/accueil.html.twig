@@ -1,0 +1,117 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Pointage{% endblock %}
+
+{% block body %}
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e1e2f, #2b2b40);
+        }
+
+        .page-pointage {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-pointage {
+            background: #ffffff;
+            padding: 40px;
+            width: 380px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card-pointage h2 {
+            margin-bottom: 15px;
+        }
+
+        .user {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .date {
+            color: #777;
+            margin-bottom: 20px;
+        }
+
+        .heure {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: not-allowed;
+            color: white;
+        }
+
+        .btn-entree {
+            background-color: #28a745;
+        }
+
+        .btn-sortie {
+            background-color: #dc3545;
+        }
+
+        .info {
+            font-size: 13px;
+            color: #555;
+        }
+    </style>
+
+    <div class="page-pointage">
+        <div class="card-pointage">
+            <h2>Pointage</h2>
+
+            <p class="user">Anthony M</p>
+            <p class="date">Mardi 9 janvier 2026</p>
+
+            <div class="heure" id="heure">08:42:15</div>
+
+            <div class="actions">
+                <form method="post" style="flex:1">
+                    <input type="hidden" name="type" value="entrée">
+                    <button class="btn btn-entree" type="submit">Embauche</button>
+                </form>
+
+                <form method="post" style="flex:1">
+                    <input type="hidden" name="type" value="sortie">
+                    <button class="btn btn-sortie" type="submit">Débauche</button>
+                </form>
+            </div>
+
+            <p class="info">
+                Veuillez pointer à votre arrivée et à votre départ.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            document.getElementById("heure").innerText =
+                    now.toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+
+{% endblock %}
