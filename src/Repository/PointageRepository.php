@@ -6,9 +6,6 @@ use App\Entity\Pointage;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * @extends ServiceEntityRepository<Pointage>
- */
 class PointageRepository extends ServiceEntityRepository {
 
     public function __construct(ManagerRegistry $registry) {
@@ -16,25 +13,31 @@ class PointageRepository extends ServiceEntityRepository {
     }
 
     /**
-     * Tri les pointage par date
-     * @param string $field
-     * @param string $order
-     * @return type
+     * Retourne tous les pointages triés
+     * @param string $champ : champ principal pour le tri ('datePointage' ou 'utilisateur')
+     * @param string $ordre : 'ASC' ou 'DESC'
+     * @return Pointage[]
      */
-    public function findAllOrderBy(string $field, string $order) {
-        return $this->createQueryBuilder('p')
-                        ->orderBy('p.' . $field, $order)
-                        ->getQuery()
-                        ->getResult();
+    public function findAllOrderBy(string $champ, string $ordre): array {
+        $qb = $this->createQueryBuilder('p');
+
+        if ($champ === 'datePointage') {
+            $qb->orderBy('p.datePointage', $ordre)
+                    ->addOrderBy('p.heureEntree', $ordre);
+        } elseif ($champ === 'utilisateur') {
+            $qb->join('p.utilisateur', 'u')
+                    ->orderBy('u.username', $ordre)
+                    ->addOrderBy('p.datePointage', $ordre)
+                    ->addOrderBy('p.heureEntree', $ordre);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     /**
      * Supprime un pointage
-     * @param Pointage $pointage
-     * @return void
      */
-    public function remove(Pointage $pointage):void
-    {
+    public function remove(Pointage $pointage): void {
         $this->getEntityManager()->remove($pointage);
         $this->getEntityManager()->flush();
     }

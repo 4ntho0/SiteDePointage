@@ -2,9 +2,9 @@
 
 namespace App\Controller;
 
-use App\Entity\Pointage;
 use App\Repository\PointageRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -18,21 +18,28 @@ class AdminPointageController extends AbstractController
     }
 
     #[Route('/admin', name: 'admin.pointage')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        // On récupère tous les pointages triés par date décroissante
-        $pointages = $this->repository->findAllOrderBy('datePointage', 'DESC');
+        $sortField = $request->query->get('sort', 'datePointage'); // par défaut
+        $sortOrder = $request->query->get('order', 'DESC');
+
+        $pointages = $this->repository->findAllOrderBy($sortField, $sortOrder);
 
         return $this->render('admin/admin.twig', [
-            'pointages' => $pointages
+            'pointages' => $pointages,
+            'sortField' => $sortField,
+            'sortOrder' => $sortOrder,
         ]);
     }
 
-    #[Route('/admin/suppr/{id}',name: 'admin.pointage.suppr')]
-    public function suppr(int $id):Response{
+    #[Route('/admin/suppr/{id}', name: 'admin.pointage.suppr')]
+    public function suppr(int $id): Response
+    {
         $pointage = $this->repository->find($id);
-        $this->repository->remove($pointage);
-        return $this->redirectToRoute('admin.pointage');
+        if ($pointage) {
+            $this->repository->remove($pointage);
+        }
 
+        return $this->redirectToRoute('admin.pointage');
     }
 }
