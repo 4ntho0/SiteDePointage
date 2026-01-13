@@ -1,65 +1,70 @@
 {% extends "base.html.twig" %}
 
 {% block body %}
-<div class="container mt-4">
-    <table class="table table-striped align-middle">
-        <thead>
-            <tr>
-                <!-- Utilisateur avec tri et filtre -->
-                <th class="text-start">
-                    <div class="d-flex flex-column">
-                        <span>Utilisateur</span>
-                        <select class="form-select form-select-sm mt-1">
-                            <option value="">Tous</option>
-                            <option value="anthony">Anthony</option>
-                            <option value="user">User</option>
-                            <option value="test">Test</option>
-                            <option value="test2">Test2</option>
-                        </select>
-                    </div>
-                </th>
-
-                <!-- Date avec tri -->
-                <th class="text-center">
-                    <div class="d-flex flex-column align-items-center">
-                        <span>Date</span>
-                        <div class="btn-group btn-group-sm mt-1">
-                            <a href="{{ path('admin.pointage', {sort: 'datePointage', order: 'ASC'}) }}" class="btn btn-outline-secondary">▲</a>
-                            <a href="{{ path('admin.pointage', {sort: 'datePointage', order: 'DESC'}) }}" class="btn btn-outline-secondary">▼</a>
+    <div class="container mt-4">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th class="text-start">
+                        <div class="d-flex flex-column">
+                            <span>Utilisateur</span>
+                            <select class="form-select form-select-sm mt-1" onchange="location = this.value;">
+                                <option value="{{ path('admin.pointage', {'sort': sortField, 'order': sortOrder}) }}"
+                                        {% if not userFilter %}selected{% endif %}>
+                                    Tous
+                                </option>
+                                {% for u in users %}
+                                    <option value="{{ path('admin.pointage', {'sort': sortField, 'order': sortOrder, 'user': u.username}) }}"
+                                            {% if userFilter == u.username %}selected{% endif %}>
+                                        {{ u.username }}
+                                    </option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </div>
-                </th>
+                    </th>
 
-                <th class="text-center">Entrée</th>
-                <th class="text-center">Début pause</th>
-                <th class="text-center">Fin pause</th>
-                <th class="text-center">Sortie</th>
-                <th class="text-center">Total</th>
-                <th class="text-center">Action</th>
-            </tr>
-        </thead>
+                    <th class="text-center">
+                        <div class="d-flex flex-column align-items-center">
+                            <span>Date</span>
+                            <div class="btn-group btn-group-sm mt-1">
+                                <a href="{{ path('admin.pointage', {'sort': 'datePointage', 'order': 'ASC', 'user': userFilter}) }}"
+                                   class="btn btn-outline-secondary">▲</a>
+                                <a href="{{ path('admin.pointage', {'sort': 'datePointage', 'order': 'DESC', 'user': userFilter}) }}"
+                                   class="btn btn-outline-secondary">▼</a>
 
-        <tbody>
-            {% for pointage in pointages %}
-                <tr>
-                    <td>{{ pointage.utilisateur ? pointage.utilisateur.username : 'Utilisateur inconnu' }}</td>
-                    <td>{{ pointage.datePointage ? pointage.datePointage|date('d/m/Y') : 'N/A' }}</td>
-                    <td>{{ pointage.heureEntree ? pointage.heureEntree|date('H:i:s') : 'N/A' }}</td>
-                    <td class="text-center">{{ pointage.heureDebutPause ? pointage.heureDebutPause|date('H:i:s') : 'N/A' }}</td>
-                    <td class="text-center">{{ pointage.heureFinPause ? pointage.heureFinPause|date('H:i:s') : 'N/A' }}</td>
-                    <td class="text-center">{{ pointage.heureSortie ? pointage.heureSortie|date('H:i:s') : 'N/A' }}</td>
-                    <td class="text-center">{{ pointage.totalTravailFormatted ?? 'N/A' }}</td>
-                    <td class="text-center">
-                        <a href="#" class="btn btn-secondary btn-sm">Éditer</a>
-                        <a href="{{ path('admin.pointage.suppr',{id: pointage.id}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Etes-vous sûr de vouloir supprimer ce pointage ?')">Supprimer</a>
-                    </td>
+                            </div>
+                        </div>
+                    </th>
+                    <th class="text-center">Entrée</th>
+                    <th class="text-center">Début pause</th>
+                    <th class="text-center">Fin pause</th>
+                    <th class="text-center">Sortie</th>
+                    <th class="text-center">Total</th>
+                    <th class="text-center">Action</th>
                 </tr>
-            {% else %}
-                <tr>
-                    <td colspan="8" class="text-center text-muted">Aucun pointage enregistré</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+            </thead>
+
+            <tbody>
+                {% for pointage in pointages %}
+                    <tr>
+                        <td>{{ pointage.utilisateur ? pointage.utilisateur.username : 'Utilisateur inconnu' }}</td>
+                        <td>{{ pointage.datePointage ? pointage.datePointage|date('d/m/Y') : 'N/A' }}</td>
+                        <td>{{ pointage.heureEntree ? pointage.heureEntree|date('H:i:s') : 'N/A' }}</td>
+                        <td class="text-center">{{ pointage.heureDebutPause ? pointage.heureDebutPause|date('H:i:s') : 'N/A' }}</td>
+                        <td class="text-center">{{ pointage.heureFinPause ? pointage.heureFinPause|date('H:i:s') : 'N/A' }}</td>
+                        <td class="text-center">{{ pointage.heureSortie ? pointage.heureSortie|date('H:i:s') : 'N/A' }}</td>
+                        <td class="text-center">{{ pointage.totalTravailFormatted ?? 'N/A' }}</td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-secondary btn-sm">Éditer</a>
+                            <a href="{{ path('admin.pointage.suppr',{id: pointage.id}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Etes-vous sûr de vouloir supprimer ce pointage ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">Aucun pointage enregistré</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}
