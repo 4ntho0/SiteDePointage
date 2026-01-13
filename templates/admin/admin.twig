@@ -1,0 +1,70 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th class="text-start">Utilisateur</th>
+                <th class="text-start">Date</th>
+                <th class="text-start">Entrée</th>
+                <th class="text-center">Début pause</th>
+                <th class="text-center">Fin pause</th>
+                <th class="text-center">Sortie</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for pointage in pointages %}
+                <tr>
+                    <td>
+                        {{ pointage.utilisateur
+                            ? pointage.utilisateur.username
+                            : 'Utilisateur inconnu'
+                        }}
+                    </td>
+
+                    <td>
+                        {{ pointage.datePointage
+                            ? pointage.datePointage|date('d/m/Y')
+                            : 'N/A'
+                        }}
+                    </td>
+
+                    <td>
+                        {{ pointage.heureEntree
+                            ? pointage.heureEntree|date('H:i:s')
+                            : 'N/A'
+                        }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ pointage.heureDebutPause
+                            ? pointage.heureDebutPause|date('H:i:s')
+                            : 'N/A'
+                        }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ pointage.heureFinPause
+                            ? pointage.heureFinPause|date('H:i:s')
+                            : 'N/A'
+                        }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ pointage.heureSortie
+                            ? pointage.heureSortie|date('H:i:s')
+                            : 'N/A'
+                        }}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted">
+                        Aucun pointage enregistré
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
