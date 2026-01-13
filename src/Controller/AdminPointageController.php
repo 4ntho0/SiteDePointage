@@ -27,4 +27,12 @@ class AdminPointageController extends AbstractController
             'pointages' => $pointages
         ]);
     }
+
+    #[Route('/admin/suppr/{id}',name: 'admin.pointage.suppr')]
+    public function suppr(int $id):Response{
+        $pointage = $this->repository->find($id);
+        $this->repository->remove($pointage);
+        return $this->redirectToRoute('admin.pointage');
+
+    }
 }

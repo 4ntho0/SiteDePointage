@@ -7,8 +7,8 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PointageRepository::class)]
-class Pointage
-{
+class Pointage {
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -33,80 +33,98 @@ class Pointage
     #[ORM\JoinColumn(nullable: false)]
     private ?User $utilisateur = null;
 
-    public function getId(): ?int
-    {
+    public function getId(): ?int {
         return $this->id;
     }
 
-    public function getDatePointage(): ?\DateTime
-    {
+    public function getDatePointage(): ?\DateTime {
         return $this->datePointage;
     }
 
-    public function setDatePointage(\DateTime $datePointage): static
-    {
+    public function setDatePointage(\DateTime $datePointage): static {
         $this->datePointage = $datePointage;
 
         return $this;
     }
 
-    public function getHeureEntree(): ?\DateTime
-    {
+    public function getHeureEntree(): ?\DateTime {
         return $this->heureEntree;
     }
 
-    public function setHeureEntree(?\DateTime $heureEntree): static
-    {
+    public function setHeureEntree(?\DateTime $heureEntree): static {
         $this->heureEntree = $heureEntree;
 
         return $this;
     }
 
-    public function getHeureSortie(): ?\DateTime
-    {
+    public function getHeureSortie(): ?\DateTime {
         return $this->heureSortie;
     }
 
-    public function setHeureSortie(?\DateTime $heureSortie): static
-    {
+    public function setHeureSortie(?\DateTime $heureSortie): static {
         $this->heureSortie = $heureSortie;
 
         return $this;
     }
 
-    public function getHeureDebutPause(): ?\DateTime
-    {
+    public function getHeureDebutPause(): ?\DateTime {
         return $this->heureDebutPause;
     }
 
-    public function setHeureDebutPause(?\DateTime $heureDebutPause): static
-    {
+    public function setHeureDebutPause(?\DateTime $heureDebutPause): static {
         $this->heureDebutPause = $heureDebutPause;
 
         return $this;
     }
 
-    public function getHeureFinPause(): ?\DateTime
-    {
+    public function getHeureFinPause(): ?\DateTime {
         return $this->heureFinPause;
     }
 
-    public function setHeureFinPause(?\DateTime $heureFinPause): static
-    {
+    public function setHeureFinPause(?\DateTime $heureFinPause): static {
         $this->heureFinPause = $heureFinPause;
 
         return $this;
     }
 
-    public function getUtilisateur(): ?User
-    {
+    public function getUtilisateur(): ?User {
         return $this->utilisateur;
     }
 
-    public function setUtilisateur(?User $utilisateur): static
-    {
+    public function setUtilisateur(?User $utilisateur): static {
         $this->utilisateur = $utilisateur;
 
         return $this;
+    }
+
+    public function getTotalTravailSeconds(): ?int {
+        if (!$this->heureEntree || !$this->heureSortie) {
+            return null;
+        }
+
+        $entree = $this->heureEntree->getTimestamp();
+        $sortie = $this->heureSortie->getTimestamp();
+
+        $total = $sortie - $entree;
+
+        // Soustraction de la pause si elle existe
+        if ($this->heureDebutPause && $this->heureFinPause) {
+            $pause = $this->heureFinPause->getTimestamp() - $this->heureDebutPause->getTimestamp();
+
+            $total -= $pause;
+        }
+
+        return max(0, $total);
+    }
+
+    
+    public function getTotalTravailFormatted(): ?string {
+        $seconds = $this->getTotalTravailSeconds();
+
+        if ($seconds === null) {
+            return null;
+        }
+
+        return gmdate('H:i:s', $seconds);
     }
 }

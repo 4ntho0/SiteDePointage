@@ -3,68 +3,107 @@
 {% block body %}
     <table class="table table-striped align-middle">
         <thead>
+        <thead>
             <tr>
-                <th class="text-start">Utilisateur</th>
-                <th class="text-start">Date</th>
-                <th class="text-start">Entrée</th>
-                <th class="text-center">Début pause</th>
-                <th class="text-center">Fin pause</th>
-                <th class="text-center">Sortie</th>
+                <th class="text-start">
+                    <div class="d-flex flex-column">
+                        <span>Utilisateur</span>
+
+                        <select class="form-select form-select-sm mt-1">
+                            <option value="">Tous</option>
+                            <option value="anthony">Anthony</option>
+                            <option value="user">User</option>
+                            <option value="test">Test</option>
+                            <option value="test2">Test2</option>
+                        </select>
+                    </div>
+                </th>
+
+                {% set sortableHeaders = [
+            'Date',
+            'Entrée',
+            'Début pause',
+            'Fin pause',
+            'Sortie',
+            'Total'
+        ] %}
+
+                {% for label in sortableHeaders %}
+                    <th class="text-center">
+                        <div class="d-flex flex-column align-items-center">
+                            <span>{{ label }}</span>
+                            <div class="btn-group btn-group-sm mt-1">
+                                <button type="button" class="btn btn-outline-secondary">▲️</button>
+                                <button type="button" class="btn btn-outline-secondary">▼</button>
+                            </div>
+                        </div>
+                    </th>
+                {% endfor %}
+
+                <th class="text-center">Action</th>
             </tr>
         </thead>
 
-        <tbody>
-            {% for pointage in pointages %}
-                <tr>
-                    <td>
-                        {{ pointage.utilisateur
+    </thead>
+
+    <tbody>
+        {% for pointage in pointages %}
+            <tr>
+                <td>
+                    {{ pointage.utilisateur
                             ? pointage.utilisateur.username
                             : 'Utilisateur inconnu'
-                        }}
-                    </td>
+                    }}
+                </td>
 
-                    <td>
-                        {{ pointage.datePointage
+                <td>
+                    {{ pointage.datePointage
                             ? pointage.datePointage|date('d/m/Y')
                             : 'N/A'
-                        }}
-                    </td>
+                    }}
+                </td>
 
-                    <td>
-                        {{ pointage.heureEntree
+                <td>
+                    {{ pointage.heureEntree
                             ? pointage.heureEntree|date('H:i:s')
                             : 'N/A'
-                        }}
-                    </td>
+                    }}
+                </td>
 
-                    <td class="text-center">
-                        {{ pointage.heureDebutPause
+                <td class="text-center">
+                    {{ pointage.heureDebutPause
                             ? pointage.heureDebutPause|date('H:i:s')
                             : 'N/A'
-                        }}
-                    </td>
+                    }}
+                </td>
 
-                    <td class="text-center">
-                        {{ pointage.heureFinPause
+                <td class="text-center">
+                    {{ pointage.heureFinPause
                             ? pointage.heureFinPause|date('H:i:s')
                             : 'N/A'
-                        }}
-                    </td>
+                    }}
+                </td>
 
-                    <td class="text-center">
-                        {{ pointage.heureSortie
+                <td class="text-center">
+                    {{ pointage.heureSortie
                             ? pointage.heureSortie|date('H:i:s')
                             : 'N/A'
-                        }}
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="6" class="text-center text-muted">
-                        Aucun pointage enregistré
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    }}
+                </td>
+                <td class="text-center">
+                    {{ pointage.totalTravailFormatted ?? 'N/A' }}
+                </td>
+                <td class="text-center">
+                    <a href="#" class="btn btn-secondary">Editer</a>
+                    <a href="{{ path('admin.pointage.suppr',{id:pointage.id}) }}" class="btn btn-danger" onclick="return confirm('Etes-vous sûr de vouloir supprimer ce pointage ?')">Supprimer</a>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">
+                    Aucun pointage enregistré
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}
