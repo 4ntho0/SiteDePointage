@@ -34,6 +34,13 @@ class AccueilController extends AbstractController {
 
         $hasEntree = $entreeEnCours !== null;
 
+        // Récupération de l'heure d'embauche si elle existe
+        $heureEntree = null;
+        if ($entreeEnCours) {
+            $heureEntree = $entreeEnCours->getHeureEntree()->format('H:i:s');
+        }
+
+
         // Traitement du formulaire
         if ($request->isMethod('POST')) {
             $type = $request->request->get('type');
@@ -62,6 +69,7 @@ class AccueilController extends AbstractController {
 
         return $this->render('pages/accueil.html.twig', [
                     'hasEntree' => $hasEntree,
+            'heureEntree' => $heureEntree,
         ]);
     }
 }

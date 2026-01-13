@@ -8,7 +8,7 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #1e1e2f, #2b2b40);
+            background: linear-gradient(135deg, #0d001c, #1e1e1e);
         }
 
         .page-pointage {
@@ -47,6 +47,19 @@
             margin-bottom: 25px;
         }
 
+        .info-embauche {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .info-duree {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
         .actions {
             display: flex;
             gap: 15px;
@@ -71,6 +84,11 @@
             background-color: #dc3545;
         }
 
+        .btn-pause {
+            background-color: #f0ad4e;
+            cursor: pointer;
+        }
+
         .info {
             font-size: 13px;
             color: #555;
@@ -86,22 +104,31 @@
 
             <div class="heure" id="heure">00:00:00</div>
 
+            {% if hasEntree %}
+                <p class="info-embauche">Heure d'embauche : {{ heureEntree }}</p>
+                <p class="info-duree" id="duree">Durée : 00:00:00</p>
+            {% endif %}
+
             <div class="actions">
 
                 {% if not hasEntree %}
                     <form method="post" style="flex:1">
                         <input type="hidden" name="type" value="entrée">
                         <button class="btn btn-entree" type="submit">
-                            Embauche
+                            Entrée
                         </button>
                     </form>
                 {% endif %}
 
                 {% if hasEntree %}
+                    <button type="button" id="btn-pause" class="btn btn-pause">
+                        Pause
+                    </button>
+
                     <form method="post" style="flex:1">
                         <input type="hidden" name="type" value="sortie">
                         <button class="btn btn-sortie" type="submit">
-                            Débauche
+                            Sortie
                         </button>
                     </form>
                 {% endif %}
@@ -138,6 +165,60 @@
         }
         setInterval(updateTime, 1000);
         updateTime();
+
+        {% if hasEntree %}
+            const heureEntree = "{{ heureEntree }}"; // HH:MM:SS
+            const dureeElement = document.getElementById('duree');
+            const btnPause = document.getElementById('btn-pause');
+
+            const [h, m, s] = heureEntree.split(':').map(Number);
+            const debut = new Date();
+            debut.setHours(h, m, s, 0);
+
+            let enPause = false;
+            let debutPause = null;
+            let tempsPauseTotal = 0;
+
+            btnPause.addEventListener('click', () => {
+                enPause = !enPause;
+
+                if (enPause) {
+                    debutPause = new Date();
+                    btnPause.innerText = "Reprendre";
+                } else {
+                    tempsPauseTotal += new Date() - debutPause;
+                    debutPause = null;
+                    btnPause.innerText = "Pause";
+                }
+            });
+
+            function updateDuree() {
+                let now = new Date();
+
+                let diff = now - debut - tempsPauseTotal;
+
+                if (enPause && debutPause) {
+                    diff = debutPause - debut - tempsPauseTotal;
+                }
+
+                if (diff < 0)
+                    diff = 0;
+
+                const heures = Math.floor(diff / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                const secondes = Math.floor((diff % 60000) / 1000);
+
+                dureeElement.innerText =
+                        "Durée : " +
+                        String(heures).padStart(2, '0') + ":" +
+                        String(minutes).padStart(2, '0') + ":" +
+                        String(secondes).padStart(2, '0');
+            }
+
+            setInterval(updateDuree, 1000);
+            updateDuree();
+        {% endif %}
+
 
 
     </script>
