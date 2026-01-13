@@ -23,6 +23,12 @@ class Pointage
     #[ORM\Column(type: Types::TIME_MUTABLE, nullable: true)]
     private ?\DateTime $heureSortie = null;
 
+    #[ORM\Column(type: Types::TIME_MUTABLE, nullable: true)]
+    private ?\DateTime $heureDebutPause = null;
+
+    #[ORM\Column(type: Types::TIME_MUTABLE, nullable: true)]
+    private ?\DateTime $heureFinPause = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -60,6 +66,30 @@ class Pointage
     public function setHeureSortie(?\DateTime $heureSortie): static
     {
         $this->heureSortie = $heureSortie;
+
+        return $this;
+    }
+
+    public function getHeureDebutPause(): ?\DateTime
+    {
+        return $this->heureDebutPause;
+    }
+
+    public function setHeureDebutPause(?\DateTime $heureDebutPause): static
+    {
+        $this->heureDebutPause = $heureDebutPause;
+
+        return $this;
+    }
+
+    public function getHeureFinPause(): ?\DateTime
+    {
+        return $this->heureFinPause;
+    }
+
+    public function setHeureFinPause(?\DateTime $heureFinPause): static
+    {
+        $this->heureFinPause = $heureFinPause;
 
         return $this;
     }

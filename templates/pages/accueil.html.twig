@@ -114,26 +114,33 @@
                 {% if not hasEntree %}
                     <form method="post" style="flex:1">
                         <input type="hidden" name="type" value="entrée">
-                        <button class="btn btn-entree" type="submit">
-                            Entrée
-                        </button>
+                        <button class="btn btn-entree">Entrée</button>
                     </form>
                 {% endif %}
 
-                {% if hasEntree %}
-                    <button type="button" id="btn-pause" class="btn btn-pause">
-                        Pause
-                    </button>
+                {% if hasEntree and not pauseTerminee %}
+                    {% if not enPause %}
+                        <form method="post" style="flex:1">
+                            <input type="hidden" name="type" value="pause">
+                            <button class="btn btn-pause">Pause</button>
+                        </form>
+                    {% else %}
+                        <form method="post" style="flex:1">
+                            <input type="hidden" name="type" value="reprise">
+                            <button class="btn btn-pause">Reprendre</button>
+                        </form>
+                    {% endif %}
+                {% endif %}
 
+                {% if hasEntree and not enPause %}
                     <form method="post" style="flex:1">
                         <input type="hidden" name="type" value="sortie">
-                        <button class="btn btn-sortie" type="submit">
-                            Sortie
-                        </button>
+                        <button class="btn btn-sortie">Sortie</button>
                     </form>
                 {% endif %}
 
             </div>
+
 
             <p class="info">
                 Veuillez pointer à votre arrivée et à votre départ.
@@ -167,38 +174,39 @@
         updateTime();
 
         {% if hasEntree %}
-            const heureEntree = "{{ heureEntree }}"; // HH:MM:SS
-            const dureeElement = document.getElementById('duree');
-            const btnPause = document.getElementById('btn-pause');
 
-            const [h, m, s] = heureEntree.split(':').map(Number);
-            const debut = new Date();
-            debut.setHours(h, m, s, 0);
+            const heureEntree = "{{ heureEntree }}";
+            const heureDebutPause = "{{ heureDebutPause ?? '' }}";
+            const heureFinPause = "{{ heureFinPause ?? '' }}";
+            const enPause = {{ enPause ? 'true' : 'false' }};
+                    const dureeElement = document.getElementById('duree');
 
-            let enPause = false;
-            let debutPause = null;
-            let tempsPauseTotal = 0;
+            function parseTimeToDate(time) {
+                if (!time)
+                    return null;
+                const [h, m, s] = time.split(':').map(Number);
+                const d = new Date();
+                d.setHours(h, m, s, 0);
+                return d;
+            }
 
-            btnPause.addEventListener('click', () => {
-                enPause = !enPause;
-
-                if (enPause) {
-                    debutPause = new Date();
-                    btnPause.innerText = "Reprendre";
-                } else {
-                    tempsPauseTotal += new Date() - debutPause;
-                    debutPause = null;
-                    btnPause.innerText = "Pause";
-                }
-            });
+            const debut = parseTimeToDate(heureEntree);
+            const debutPause = parseTimeToDate(heureDebutPause);
+            const finPause = parseTimeToDate(heureFinPause);
 
             function updateDuree() {
                 let now = new Date();
 
-                let diff = now - debut - tempsPauseTotal;
+                let diff = now - debut;
 
+                // Pause terminée
+                if (debutPause && finPause) {
+                    diff -= (finPause - debutPause);
+                }
+
+                // Pause en cours → figer le timer
                 if (enPause && debutPause) {
-                    diff = debutPause - debut - tempsPauseTotal;
+                    diff = debutPause - debut;
                 }
 
                 if (diff < 0)
@@ -217,7 +225,9 @@
 
             setInterval(updateDuree, 1000);
             updateDuree();
+
         {% endif %}
+
 
 
 
