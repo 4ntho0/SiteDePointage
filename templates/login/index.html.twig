@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block body %}
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #0d001c, #1e1e1e);
+    }
+
+    .page-pointage {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .card-pointage {
+        background: #ffffff;
+        padding: 40px;
+        width: 380px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .card-pointage h2 {
+        margin-bottom: 20px;
+    }
+
+    .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 10px;
+    }
+
+    .btn {
+        padding: 15px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        color: black;
+        background-color: #ececec;
+    }
+
+    .error {
+        color: #dc3545;
+        margin-bottom: 15px;
+    }
+
+</style>
+
+<div class="page-pointage">
+    <div class="card-pointage">
+        <h2>Connexion</h2>
+
+        {% if error %}
+            <div class="error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+        {% endif %}
+
+        <form action="{{ path('app_login') }}" method="post">
+            <div class="actions">
+                <input type="text" name="_username" placeholder="Login" value="{{ last_username }}" required autofocus class="btn">
+                <input type="password" name="_password" placeholder="Password" required class="btn">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                <button type="submit" class="btn">Se connecter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
