@@ -13,15 +13,6 @@ class PointageRepository extends ServiceEntityRepository {
     }
 
     /**
-     * Retourne tous les pointages triés et optionnellement filtrés par utilisateur
-     *
-     * @param string $champ 'datePointage' ou 'utilisateur'
-     * @param string $ordre 'ASC' ou 'DESC'
-     * @param string|null $userFilter
-     * @return Pointage[]
-     */
-
-    /**
      * Retourne tous les pointages triés et filtrés
      *
      * @param string $champ : champ pour le tri ('datePointage' ou 'utilisateur')

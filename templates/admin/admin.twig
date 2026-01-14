@@ -55,7 +55,17 @@
                         <td class="text-center">{{ pointage.heureSortie ? pointage.heureSortie|date('H:i:s') : 'N/A' }}</td>
                         <td class="text-center">{{ pointage.totalTravailFormatted ?? 'N/A' }}</td>
                         <td class="text-center">
-                            <a href="#" class="btn btn-secondary btn-sm">Éditer</a>
+                            <button class="btn btn-secondary btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#editPointageModal" 
+                                    data-id="{{ pointage.id }}"
+                                    data-date="{{ pointage.datePointage ? pointage.datePointage|date('Y-m-d') : '' }}"
+                                    data-entree="{{ pointage.heureEntree ? pointage.heureEntree|date('H:i') : '' }}"
+                                    data-debut="{{ pointage.heureDebutPause ? pointage.heureDebutPause|date('H:i') : '' }}"
+                                    data-fin="{{ pointage.heureFinPause ? pointage.heureFinPause|date('H:i') : '' }}"
+                                    data-sortie="{{ pointage.heureSortie ? pointage.heureSortie|date('H:i') : '' }}">
+                                Éditer
+                            </button>
                             <a href="{{ path('admin.pointage.suppr',{id: pointage.id}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Etes-vous sûr de vouloir supprimer ce pointage ?')">Supprimer</a>
                         </td>
                     </tr>
@@ -66,5 +76,74 @@
                 {% endfor %}
             </tbody>
         </table>
+            
+            
+        <!-- Modal Éditer Pointage -->
+        <div class="modal fade" id="editPointageModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <form id="editPointageForm" method="POST" action="{{ path('admin.pointage.edit') }}">
+                    <input type="hidden" name="id" id="modalPointageId">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Éditer le pointage</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="modalDate" class="form-label">Date</label>
+                                <input type="date" class="form-control" id="modalDate" name="datePointage" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="modalEntree" class="form-label">Heure d'entrée</label>
+                                <input type="time" class="form-control" id="modalEntree" name="heureEntree">
+                            </div>
+                            <div class="mb-3">
+                                <label for="modalDebutPause" class="form-label">Début pause</label>
+                                <input type="time" class="form-control" id="modalDebutPause" name="heureDebutPause">
+                            </div>
+                            <div class="mb-3">
+                                <label for="modalFinPause" class="form-label">Fin pause</label>
+                                <input type="time" class="form-control" id="modalFinPause" name="heureFinPause">
+                            </div>
+                            <div class="mb-3">
+                                <label for="modalSortie" class="form-label">Heure de sortie</label>
+                                <input type="time" class="form-control" id="modalSortie" name="heureSortie">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const editModal = document.getElementById('editPointageModal');
+
+                editModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget; // bouton qui a déclenché le modal
+
+                    // Récupération des données du bouton
+                    const id = button.getAttribute('data-id');
+                    const date = button.getAttribute('data-date');
+                    const entree = button.getAttribute('data-entree');
+                    const debut = button.getAttribute('data-debut');
+                    const fin = button.getAttribute('data-fin');
+                    const sortie = button.getAttribute('data-sortie');
+
+                    // Remplissage du formulaire
+                    document.getElementById('modalPointageId').value = id;
+                    document.getElementById('modalDate').value = date;
+                    document.getElementById('modalEntree').value = entree;
+                    document.getElementById('modalDebutPause').value = debut;
+                    document.getElementById('modalFinPause').value = fin;
+                    document.getElementById('modalSortie').value = sortie;
+                });
+            });
+        </script>
+
+
     </div>
 {% endblock %}
