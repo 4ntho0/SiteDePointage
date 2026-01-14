@@ -3,42 +3,51 @@
 namespace App\Controller;
 
 use App\Repository\PointageRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Doctrine\ORM\EntityManagerInterface;
 
-class AdminPointageController extends AbstractController {
-
+class AdminPointageController extends AbstractController
+{
     private PointageRepository $repository;
 
-    public function __construct(PointageRepository $repository) {
+    public function __construct(PointageRepository $repository)
+    {
         $this->repository = $repository;
     }
 
-    #[Route('/admin', name: 'admin.pointage')]
-    public function index(Request $request): Response {
+    #[Route('/admin/pointages', name: 'admin.pointage')]
+    public function index(Request $request): Response
+    {
         $sortField = $request->query->get('sort', 'datePointage');
         $sortOrder = $request->query->get('order', 'DESC');
         $userFilter = $request->query->get('user');
 
-        $pointages = $this->repository->findAllOrderByField($sortField, $sortOrder, $userFilter);
+        $pointages = $this->repository->findAllOrderByField(
+            $sortField,
+            $sortOrder,
+            $userFilter
+        );
 
+        // ✅ UNIQUEMENT pour le select de filtre
         $users = $this->repository->getAllUsernames();
 
-        return $this->render('admin/admin.twig', [
-                    'pointages' => $pointages,
-                    'sortField' => $sortField,
-                    'sortOrder' => $sortOrder,
-                    'userFilter' => $userFilter,
-                    'users' => $users,
+        return $this->render('admin/admin.pointages.html.twig', [
+            'pointages' => $pointages,
+            'users' => $users,
+            'sortField' => $sortField,
+            'sortOrder' => $sortOrder,
+            'userFilter' => $userFilter,
         ]);
     }
 
-    #[Route('/admin/suppr/{id}', name: 'admin.pointage.suppr')]
-    public function suppr(int $id): Response {
+    #[Route('/admin/pointages/suppr/{id}', name: 'admin.pointage.suppr')]
+    public function suppr(int $id): Response
+    {
         $pointage = $this->repository->find($id);
+
         if ($pointage) {
             $this->repository->remove($pointage);
         }
@@ -46,66 +55,48 @@ class AdminPointageController extends AbstractController {
         return $this->redirectToRoute('admin.pointage');
     }
 
-    #[Route('/admin/edit', name: 'admin.pointage.edit', methods: ['POST'])]
-    public function edit(Request $request, PointageRepository $repository, EntityManagerInterface $em): Response {
+    #[Route('/admin/pointages/edit', name: 'admin.pointage.edit', methods: ['POST'])]
+    public function edit(Request $request, EntityManagerInterface $em): Response
+    {
         $id = $request->request->get('id');
-        $pointage = $repository->find($id);
+        $pointage = $this->repository->find($id);
 
         if (!$pointage) {
-            $this->addFlash('error', 'Pointage introuvable.');
             return $this->redirectToRoute('admin.pointage');
         }
 
         $date = $request->request->get('datePointage');
-        $heureEntree = $request->request->get('heureEntree');
-        $heureDebutPause = $request->request->get('heureDebutPause');
-        $heureFinPause = $request->request->get('heureFinPause');
-        $heureSortie = $request->request->get('heureSortie');
+        $entree = $request->request->get('heureEntree');
+        $debut = $request->request->get('heureDebutPause');
+        $fin = $request->request->get('heureFinPause');
+        $sortie = $request->request->get('heureSortie');
 
-        // Création des DateTime
-        $entree = $heureEntree ? new \DateTime($heureEntree) : null;
-        $debutPause = $heureDebutPause ? new \DateTime($heureDebutPause) : null;
-        $finPause = $heureFinPause ? new \DateTime($heureFinPause) : null;
-        $sortie = $heureSortie ? new \DateTime($heureSortie) : null;
+        $entree = $entree ? new \DateTime($entree) : null;
+        $debut = $debut ? new \DateTime($debut) : null;
+        $fin = $fin ? new \DateTime($fin) : null;
+        $sortie = $sortie ? new \DateTime($sortie) : null;
 
-        // Vérifier que la pause est complète ou vide
-        if (($debutPause && !$finPause) || (!$debutPause && $finPause)) {
-            $this->addFlash('error', 'Vous devez remplir à la fois le début et la fin de la pause ou laisser les deux vides.');
+        if (($debut && !$fin) || (!$debut && $fin)) {
             return $this->redirectToRoute('admin.pointage');
         }
 
-
-        // Vérification de la cohérence des horaires
-        if ($entree && $debutPause && $entree > $debutPause) {
-            $this->addFlash('error', "L'heure d'entrée doit être avant le début de la pause.");
+        if (
+            ($entree && $debut && $entree > $debut) ||
+            ($debut && $fin && $debut > $fin) ||
+            ($fin && $sortie && $fin > $sortie) ||
+            ($entree && $sortie && $entree > $sortie)
+        ) {
             return $this->redirectToRoute('admin.pointage');
         }
 
-        if ($debutPause && $finPause && $debutPause > $finPause) {
-            $this->addFlash('error', "Le début de pause doit être avant la fin de la pause.");
-            return $this->redirectToRoute('admin.pointage');
-        }
-
-        if ($sortie && $finPause && $finPause > $sortie) {
-            $this->addFlash('error', "La fin de pause doit être avant l'heure de sortie.");
-            return $this->redirectToRoute('admin.pointage');
-        }
-
-        if ($entree && $sortie && $entree > $sortie) {
-            $this->addFlash('error', "L'heure d'entrée doit être avant l'heure de sortie.");
-            return $this->redirectToRoute('admin.pointage');
-        }
-
-        // Mise à jour après validation
         $pointage->setDatePointage(new \DateTime($date));
         $pointage->setHeureEntree($entree);
-        $pointage->setHeureDebutPause($debutPause);
-        $pointage->setHeureFinPause($finPause);
+        $pointage->setHeureDebutPause($debut);
+        $pointage->setHeureFinPause($fin);
         $pointage->setHeureSortie($sortie);
 
         $em->flush();
 
-        $this->addFlash('success', 'Pointage mis à jour avec succès.');
         return $this->redirectToRoute('admin.pointage');
     }
 }

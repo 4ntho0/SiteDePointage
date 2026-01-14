@@ -1,7 +1,9 @@
 {% extends "base.html.twig" %}
 
 {% block body %}
+
     <div class="container mt-4">
+        <h5>Liste des pointages</h5>
         <table class="table table-striped align-middle">
             <thead>
                 <tr>
@@ -28,9 +30,9 @@
                             <span>Date</span>
                             <div class="btn-group btn-group-sm mt-1">
                                 <a href="{{ path('admin.pointage', {'sort': 'datePointage', 'order': 'ASC', 'user': userFilter}) }}"
-                                   class="btn btn-outline-secondary">▲</a>
-                                <a href="{{ path('admin.pointage', {'sort': 'datePointage', 'order': 'DESC', 'user': userFilter}) }}"
                                    class="btn btn-outline-secondary">▼</a>
+                                <a href="{{ path('admin.pointage', {'sort': 'datePointage', 'order': 'DESC', 'user': userFilter}) }}"
+                                   class="btn btn-outline-secondary">▲</a>
 
                             </div>
                         </div>
@@ -118,6 +120,7 @@
             </form>
         </div>
     </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

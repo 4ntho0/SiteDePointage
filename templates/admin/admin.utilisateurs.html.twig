@@ -1,0 +1,53 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h5>Gestion des utilisateurs</h5>
+
+        <table class="table table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Rôles</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for u in users %}
+                    <tr>
+                        <td>{{ u.username }}</td>
+
+                        <td>
+                            {% for role in u.roles %}
+                                <span class="badge bg-secondary me-1">
+                                    {{ role }}
+                                </span>
+                            {% endfor %}
+                        </td>
+                        <td class="text-center">
+                            <button
+                                class="btn btn-outline-primary btn-sm me-1"
+                                title="Changer le mot de passe"
+                                >
+                                Changer mdp
+                            </button>
+                            <button
+                                class="btn btn-outline-danger btn-sm"
+                                title="Supprimer l'utilisateur"
+                                >
+                                Supprimer
+                            </button>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">
+                            Aucun utilisateur
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
