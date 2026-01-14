@@ -30,9 +30,9 @@
                             <span>Date</span>
                             <div class="btn-group btn-group-sm mt-1">
                                 <a href="{{ path('admin.pointage', {'sort': 'datePointage', 'order': 'ASC', 'user': userFilter}) }}"
-                                   class="btn btn-outline-secondary">▼</a>
+                                   class="btn btn-outline-secondary" title="Tri du plus ancien au plus récent">▼</a>
                                 <a href="{{ path('admin.pointage', {'sort': 'datePointage', 'order': 'DESC', 'user': userFilter}) }}"
-                                   class="btn btn-outline-secondary">▲</a>
+                                   class="btn btn-outline-secondary" title="Tri du plus récent au plus ancien">▲</a>
 
                             </div>
                         </div>
@@ -57,7 +57,8 @@
                         <td class="text-center">{{ pointage.heureSortie ? pointage.heureSortie|date('H:i:s') : 'N/A' }}</td>
                         <td class="text-center">{{ pointage.totalTravailFormatted ?? 'N/A' }}</td>
                         <td class="text-center">
-                            <button class="btn btn-secondary btn-sm" 
+                            <button class="btn btn-secondary btn-sm"
+                                    title="Modifier ce pointage"
                                     data-bs-toggle="modal" 
                                     data-bs-target="#editPointageModal" 
                                     data-id="{{ pointage.id }}"
@@ -68,7 +69,7 @@
                                     data-sortie="{{ pointage.heureSortie ? pointage.heureSortie|date('H:i') : '' }}">
                                 Éditer
                             </button>
-                            <a href="{{ path('admin.pointage.suppr',{id: pointage.id}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Etes-vous sûr de vouloir supprimer ce pointage ?')">Supprimer</a>
+                            <a href="{{ path('admin.pointage.suppr',{id: pointage.id}) }}" class="btn btn-danger btn-sm" title="Supprimer ce pointage" onclick="return confirm('Etes-vous sûr de vouloir supprimer ce pointage ?')">Supprimer</a>
                         </td>
                     </tr>
                 {% else %}
