@@ -76,74 +76,154 @@
                 {% endfor %}
             </tbody>
         </table>
-            
-            
-        <!-- Modal Éditer Pointage -->
-        <div class="modal fade" id="editPointageModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <form id="editPointageForm" method="POST" action="{{ path('admin.pointage.edit') }}">
-                    <input type="hidden" name="id" id="modalPointageId">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Éditer le pointage</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+    </div>
+
+    <!-- Modal Éditer Pointage -->
+    <div class="modal fade" id="editPointageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="editPointageForm" method="POST" action="{{ path('admin.pointage.edit') }}">
+                <input type="hidden" name="id" id="modalPointageId">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Éditer le pointage</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="modalDate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="modalDate" name="datePointage" required>
                         </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="modalDate" class="form-label">Date</label>
-                                <input type="date" class="form-control" id="modalDate" name="datePointage" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="modalEntree" class="form-label">Heure d'entrée</label>
-                                <input type="time" class="form-control" id="modalEntree" name="heureEntree">
-                            </div>
-                            <div class="mb-3">
-                                <label for="modalDebutPause" class="form-label">Début pause</label>
-                                <input type="time" class="form-control" id="modalDebutPause" name="heureDebutPause">
-                            </div>
-                            <div class="mb-3">
-                                <label for="modalFinPause" class="form-label">Fin pause</label>
-                                <input type="time" class="form-control" id="modalFinPause" name="heureFinPause">
-                            </div>
-                            <div class="mb-3">
-                                <label for="modalSortie" class="form-label">Heure de sortie</label>
-                                <input type="time" class="form-control" id="modalSortie" name="heureSortie">
-                            </div>
+                        <div class="mb-3">
+                            <label for="modalEntree" class="form-label">Heure d'entrée</label>
+                            <input type="time" class="form-control" id="modalEntree" name="heureEntree">
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        <div class="mb-3">
+                            <label for="modalDebutPause" class="form-label">Début pause</label>
+                            <input type="time" class="form-control" id="modalDebutPause" name="heureDebutPause">
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalFinPause" class="form-label">Fin pause</label>
+                            <input type="time" class="form-control" id="modalFinPause" name="heureFinPause">
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalSortie" class="form-label">Heure de sortie</label>
+                            <input type="time" class="form-control" id="modalSortie" name="heureSortie">
                         </div>
                     </div>
-                </form>
-            </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </div>
+            </form>
         </div>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const editModal = document.getElementById('editPointageModal');
-
-                editModal.addEventListener('show.bs.modal', function (event) {
-                    const button = event.relatedTarget; // bouton qui a déclenché le modal
-
-                    // Récupération des données du bouton
-                    const id = button.getAttribute('data-id');
-                    const date = button.getAttribute('data-date');
-                    const entree = button.getAttribute('data-entree');
-                    const debut = button.getAttribute('data-debut');
-                    const fin = button.getAttribute('data-fin');
-                    const sortie = button.getAttribute('data-sortie');
-
-                    // Remplissage du formulaire
-                    document.getElementById('modalPointageId').value = id;
-                    document.getElementById('modalDate').value = date;
-                    document.getElementById('modalEntree').value = entree;
-                    document.getElementById('modalDebutPause').value = debut;
-                    document.getElementById('modalFinPause').value = fin;
-                    document.getElementById('modalSortie').value = sortie;
-                });
-            });
-        </script>
-
-
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const editModal = document.getElementById('editPointageModal');
+
+            editModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                document.getElementById('modalPointageId').value = button.getAttribute('data-id');
+                document.getElementById('modalDate').value = button.getAttribute('data-date');
+                document.getElementById('modalEntree').value = button.getAttribute('data-entree');
+                document.getElementById('modalDebutPause').value = button.getAttribute('data-debut');
+                document.getElementById('modalFinPause').value = button.getAttribute('data-fin');
+                document.getElementById('modalSortie').value = button.getAttribute('data-sortie');
+
+                updateTimeConstraints();
+            });
+
+            function updateTimeConstraints() {
+                const entree = document.getElementById('modalEntree').value;
+                const debut = document.getElementById('modalDebutPause').value;
+                const fin = document.getElementById('modalFinPause').value;
+
+                const sortie = document.getElementById('modalSortie');
+
+                const debutPause = document.getElementById('modalDebutPause');
+                const finPause = document.getElementById('modalFinPause');
+
+                // min/max dynamiques
+                if (entree) {
+                    debutPause.min = entree;
+                    sortie.min = entree;
+                } else {
+                    debutPause.removeAttribute('min');
+                    sortie.removeAttribute('min');
+                }
+
+                if (debut) {
+                    finPause.min = debut;
+                } else {
+                    finPause.removeAttribute('min');
+                }
+
+                if (fin) {
+                    sortie.min = fin;
+                }
+            }
+
+            ['modalEntree', 'modalDebutPause', 'modalFinPause'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateTimeConstraints);
+            });
+
+            document.getElementById('editPointageForm').addEventListener('submit', function (e) {
+                const entree = document.getElementById('modalEntree').value;
+                const debut = document.getElementById('modalDebutPause').value;
+                const fin = document.getElementById('modalFinPause').value;
+                const sortie = document.getElementById('modalSortie').value;
+
+                // Pause complète obligatoire
+                if ((debut && !fin) || (!debut && fin)) {
+                    alert("Vous devez remplir à la fois le début et la fin de la pause ou laisser les deux vides.");
+                    e.preventDefault();
+                    return;
+                }
+
+                // Sortie nécessite entrée
+                if (sortie && !entree) {
+                    alert("Vous ne pouvez pas renseigner une sortie sans avoir renseigné l'heure d'entrée.");
+                    e.preventDefault();
+                    return;
+                }
+
+                function toMinutes(time) {
+                    if (!time)
+                        return null;
+                    const [h, m] = time.split(':').map(Number);
+                    return h * 60 + m;
+                }
+
+                const entreeMin = toMinutes(entree);
+                const debutMin = toMinutes(debut);
+                const finMin = toMinutes(fin);
+                const sortieMin = toMinutes(sortie);
+
+                if (entreeMin !== null && debutMin !== null && entreeMin > debutMin) {
+                    alert("L'heure d'entrée doit être avant le début de la pause.");
+                    e.preventDefault();
+                    return;
+                }
+                if (debutMin !== null && finMin !== null && debutMin > finMin) {
+                    alert("Le début de pause doit être avant la fin de la pause.");
+                    e.preventDefault();
+                    return;
+                }
+                if (finMin !== null && sortieMin !== null && finMin > sortieMin) {
+                    alert("La fin de pause doit être avant l'heure de sortie.");
+                    e.preventDefault();
+                    return;
+                }
+                if (entreeMin !== null && sortieMin !== null && entreeMin > sortieMin) {
+                    alert("L'heure d'entrée doit être avant l'heure de sortie.");
+                    e.preventDefault();
+                    return;
+                }
+            });
+        });
+    </script>
+
+
 {% endblock %}

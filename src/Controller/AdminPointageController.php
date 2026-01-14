@@ -56,20 +56,52 @@ class AdminPointageController extends AbstractController {
             return $this->redirectToRoute('admin.pointage');
         }
 
-        // Mise à jour des champs
-        $pointage->setDatePointage(new \DateTime($request->request->get('datePointage')));
-
+        $date = $request->request->get('datePointage');
         $heureEntree = $request->request->get('heureEntree');
-        $pointage->setHeureEntree($heureEntree ? new \DateTime($heureEntree) : null);
-
         $heureDebutPause = $request->request->get('heureDebutPause');
-        $pointage->setHeureDebutPause($heureDebutPause ? new \DateTime($heureDebutPause) : null);
-
         $heureFinPause = $request->request->get('heureFinPause');
-        $pointage->setHeureFinPause($heureFinPause ? new \DateTime($heureFinPause) : null);
-
         $heureSortie = $request->request->get('heureSortie');
-        $pointage->setHeureSortie($heureSortie ? new \DateTime($heureSortie) : null);
+
+        // Création des DateTime
+        $entree = $heureEntree ? new \DateTime($heureEntree) : null;
+        $debutPause = $heureDebutPause ? new \DateTime($heureDebutPause) : null;
+        $finPause = $heureFinPause ? new \DateTime($heureFinPause) : null;
+        $sortie = $heureSortie ? new \DateTime($heureSortie) : null;
+
+        // Vérifier que la pause est complète ou vide
+        if (($debutPause && !$finPause) || (!$debutPause && $finPause)) {
+            $this->addFlash('error', 'Vous devez remplir à la fois le début et la fin de la pause ou laisser les deux vides.');
+            return $this->redirectToRoute('admin.pointage');
+        }
+
+
+        // Vérification de la cohérence des horaires
+        if ($entree && $debutPause && $entree > $debutPause) {
+            $this->addFlash('error', "L'heure d'entrée doit être avant le début de la pause.");
+            return $this->redirectToRoute('admin.pointage');
+        }
+
+        if ($debutPause && $finPause && $debutPause > $finPause) {
+            $this->addFlash('error', "Le début de pause doit être avant la fin de la pause.");
+            return $this->redirectToRoute('admin.pointage');
+        }
+
+        if ($sortie && $finPause && $finPause > $sortie) {
+            $this->addFlash('error', "La fin de pause doit être avant l'heure de sortie.");
+            return $this->redirectToRoute('admin.pointage');
+        }
+
+        if ($entree && $sortie && $entree > $sortie) {
+            $this->addFlash('error', "L'heure d'entrée doit être avant l'heure de sortie.");
+            return $this->redirectToRoute('admin.pointage');
+        }
+
+        // Mise à jour après validation
+        $pointage->setDatePointage(new \DateTime($date));
+        $pointage->setHeureEntree($entree);
+        $pointage->setHeureDebutPause($debutPause);
+        $pointage->setHeureFinPause($finPause);
+        $pointage->setHeureSortie($sortie);
 
         $em->flush();
 
