@@ -77,7 +77,6 @@
             </tbody>
         </table>
     </div>
-
     <!-- Modal Éditer Pointage -->
     <div class="modal fade" id="editPointageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -91,7 +90,8 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="modalDate" class="form-label">Date</label>
-                            <input type="date" class="form-control" id="modalDate" name="datePointage" required>
+                            <input type="date" class="form-control" id="modalDate" name="datePointage" required
+                                   max="{{ "now"|date('Y-m-d') }}">
                         </div>
                         <div class="mb-3">
                             <label for="modalEntree" class="form-label">Heure d'entrée</label>
@@ -139,7 +139,6 @@
                 const entree = document.getElementById('modalEntree').value;
                 const debut = document.getElementById('modalDebutPause').value;
                 const fin = document.getElementById('modalFinPause').value;
-
                 const sortie = document.getElementById('modalSortie');
 
                 const debutPause = document.getElementById('modalDebutPause');
@@ -170,6 +169,15 @@
             });
 
             document.getElementById('editPointageForm').addEventListener('submit', function (e) {
+                const date = document.getElementById('modalDate').value;
+                const today = new Date().toISOString().split('T')[0];
+
+                if (date > today) {
+                    alert("Vous ne pouvez pas sélectionner une date future.");
+                    e.preventDefault();
+                    return;
+                }
+
                 const entree = document.getElementById('modalEntree').value;
                 const debut = document.getElementById('modalDebutPause').value;
                 const fin = document.getElementById('modalFinPause').value;
@@ -224,6 +232,5 @@
             });
         });
     </script>
-
 
 {% endblock %}
