@@ -8,7 +8,7 @@
                 <a href="#" class="btn btn-success btn-sm me-2" title="Ajouter un utilisateur" data-bs-toggle="modal" data-bs-target="#addUserModal">
                     Ajouter utilisateur
                 </a>
-                <a href="{{ path('admin.pointage') }}" class="btn btn-secondary btn-sm" title="Voir les pointages">
+                <a href="{{ path('admin.pointage') }}" class="btn btn-secondary btn-sm" title="Voir la page des pointages">
                     Pointages
                 </a>
             </div>
@@ -37,17 +37,21 @@
                         </td>
                         <td class="text-center">
                             <button
-                                class="btn btn-outline-primary btn-sm me-1"
+                                class="btn btn-outline-secondary btn-sm me-1"
                                 title="Changer le mot de passe"
                                 >
                                 Changer mdp
                             </button>
                             <button
-                                class="btn btn-outline-danger btn-sm"
-                                title="Supprimer l'utilisateur"
+                                class="btn btn-outline-warning btn-sm me-1"
+                                title="Changer le mot de passe"
                                 >
-                                Supprimer
+                                Désactiver
                             </button>
+                            <form method="POST" action="{{ path('admin.utilisateurs.delete', {'id': u.id}) }}" style="display:inline-block;" onsubmit="return confirm('Supprimer cet utilisateur et tous ses pointages ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ u.id) }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Supprimer l'utilisateur">Supprimer</button>
+                            </form>
                         </td>
                     </tr>
                 {% else %}
@@ -79,7 +83,7 @@
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
                         <div class="mb-3">
-                            <label for="roles" class="form-label">Rôles (séparés par une virgule)</label>
+                            <label for="roles" class="form-label">Rôle</label>
                             <input type="text" class="form-control" id="roles" name="roles" value="ROLE_USER">
                         </div>
                     </div>

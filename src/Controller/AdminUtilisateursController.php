@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Repository\UserRepository;
+use Symfony\Component\Security\Csrf\CsrfToken;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -11,7 +13,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-
 
 class AdminUtilisateursController extends AbstractController {
 
@@ -48,6 +49,22 @@ class AdminUtilisateursController extends AbstractController {
         $em->flush();
 
         $this->addFlash('success', 'Utilisateur créé avec succès.');
+        return $this->redirectToRoute('admin.utilisateurs');
+    }
+
+    #[Route('/admin/utilisateurs/delete/{id}', name: 'admin.utilisateurs.delete', methods: ['POST'])]
+    public function delete(User $user, EntityManagerInterface $em, Request $request): RedirectResponse {
+        $submittedToken = $request->request->get('_token');
+
+        if (!$this->isCsrfTokenValid('delete_user_' . $user->getId(), $submittedToken)) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin.utilisateurs');
+        }
+
+        $em->remove($user); // tous ses pointages seront supprimés grâce à orphanRemoval
+        $em->flush();
+
+        $this->addFlash('success', 'Utilisateur et ses pointages supprimés avec succès.');
         return $this->redirectToRoute('admin.utilisateurs');
     }
 }
