@@ -31,9 +31,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: \App\Entity\Pointage::class, orphanRemoval: true, cascade: ['remove'])]
     private Collection $pointages;
 
+    #[ORM\Column]
+    private ?bool $isActive = true;
+
     public function __construct()
     {
         $this->pointages = new ArrayCollection();
+        $this->isActive = true;
     }
 
     public function getId(): ?int
@@ -115,6 +119,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $pointage->setUtilisateur(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isActive(): ?bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): static
+    {
+        $this->isActive = $isActive;
 
         return $this;
     }

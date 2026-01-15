@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\UserRepository;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -76,6 +77,23 @@ class AdminUtilisateursController extends AbstractController {
 
         $em->remove($user);
         $em->flush();
+        return $this->redirectToRoute('admin.utilisateurs');
+    }
+
+    #[Route('/admin/utilisateurs/toggle/{id}', name: 'admin.utilisateurs.toggle', methods: ['POST'])]
+    public function toggle(User $user, EntityManagerInterface $em, Request $request): RedirectResponse {
+        $submittedToken = $request->request->get('_token');
+
+        if (!$this->isCsrfTokenValid('toggle_user_' . $user->getId(), $submittedToken)) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin.utilisateurs');
+        }
+
+        // Inverse la valeur de isActive
+        $user->setIsActive(!$user->isActive());
+        $em->flush();
+
+        $this->addFlash('success', 'État de l’utilisateur mis à jour.');
         return $this->redirectToRoute('admin.utilisateurs');
     }
 }

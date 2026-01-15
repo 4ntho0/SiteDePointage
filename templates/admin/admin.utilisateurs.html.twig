@@ -19,6 +19,7 @@
                 <tr>
                     <th>Utilisateur</th>
                     <th>Rôles</th>
+                    <th>État</th>
                     <th class="text-center">Actions</th>
                 </tr>
             </thead>
@@ -35,18 +36,25 @@
                                 </span>
                             {% endfor %}
                         </td>
+                        <td>
+                            <form method="POST" action="{{ path('admin.utilisateurs.toggle', {'id': u.id}) }}" 
+                                  style="display:inline-block"
+                                  onsubmit="return confirm('{{ u.isActive ? 'Un utilisateur désactivé ne pourra plus se connecter mais vous aurez toujours accès à ses anciens pointages.' : 'Voulez-vous réactiver cet utilisateur ?' }}');"
+                                  >
+                                <input type="hidden" name="_token" value="{{ csrf_token('toggle_user_' ~ u.id) }}">
+                                {% if u.isActive %}
+                                    <button type="submit" class="btn btn-success btn-sm">Activé</button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-danger btn-sm">Désactivé</button>
+                                {% endif %}
+                            </form>
+                        </td>
                         <td class="text-center">
                             <button
                                 class="btn btn-outline-secondary btn-sm me-1"
                                 title="Changer le mot de passe"
                                 >
                                 Changer mdp
-                            </button>
-                            <button
-                                class="btn btn-outline-warning btn-sm me-1"
-                                title="Changer le mot de passe"
-                                >
-                                Désactiver
                             </button>
                             <form 
                                 method="POST" 
@@ -215,6 +223,7 @@
             });
 
         });
+
     </script>
 
 

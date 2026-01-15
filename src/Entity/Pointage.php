@@ -117,7 +117,7 @@ class Pointage {
         return max(0, $total);
     }
 
-    
+
     public function getTotalTravailFormatted(): ?string {
         $seconds = $this->getTotalTravailSeconds();
 
