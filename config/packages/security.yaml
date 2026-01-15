@@ -17,6 +17,7 @@ security:
             lazy: true
             #http_basic: true
             provider: app_user_provider
+            user_checker: App\Security\UserChecker
             form_login:
                 #app_login est le nom de la route défini dans le controleur
                 login_path: app_login

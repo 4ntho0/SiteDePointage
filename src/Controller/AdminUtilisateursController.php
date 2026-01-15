@@ -105,4 +105,18 @@ class AdminUtilisateursController extends AbstractController {
         $this->addFlash('success', 'État de l’utilisateur mis à jour.');
         return $this->redirectToRoute('admin.utilisateurs');
     }
+
+    #[Route('/check-active', name: 'check_active')]
+    public function checkActive(): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if (!$user || !$user->isActive()) {
+            // Utilisateur désactivé
+            return $this->json(['active' => false]);
+        }
+
+        return $this->json(['active' => true]);
+    }
+
 }

@@ -134,4 +134,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    public function isEnabled(): bool
+{
+    // L’utilisateur est considéré comme actif uniquement si isActive = true
+    return $this->isActive();
+}
 }
