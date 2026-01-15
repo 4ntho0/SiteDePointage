@@ -18,11 +18,20 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class AdminUtilisateursController extends AbstractController {
 
     #[Route('admin/utilisateurs', name: 'admin.utilisateurs')]
-    public function index(UserRepository $userRepository): Response {
-        $users = $userRepository->findAll();
+    public function index(UserRepository $userRepository, Request $request): Response {
+        $filterStatus = $request->query->get('status', 'active'); // Par défaut : actifs
+
+        if ($filterStatus === 'active') {
+            $users = $userRepository->findBy(['isActive' => true]);
+        } elseif ($filterStatus === 'inactive') {
+            $users = $userRepository->findBy(['isActive' => false]);
+        } else {
+            $users = $userRepository->findAll();
+        }
 
         return $this->render('admin/admin.utilisateurs.html.twig', [
                     'users' => $users,
+                    'filterStatus' => $filterStatus,
         ]);
     }
 

@@ -13,6 +13,15 @@
                 </a>
             </div>
         </div>
+        <div class="d-flex mb-3 align-items-center">
+            <label for="filterStatus" class="me-2">Filtrer par état :</label>
+            <select id="filterStatus" class="form-select form-select-sm w-auto"
+                    onchange="location = this.value;">
+                <option value="{{ path('admin.utilisateurs', {'status': 'all'}) }}" {% if filterStatus == 'all' %}selected{% endif %}>Tous</option>              
+                <option value="{{ path('admin.utilisateurs', {'status': 'active'}) }}" {% if filterStatus == 'active' %}selected{% endif %}>Activé</option>               
+                <option value="{{ path('admin.utilisateurs', {'status': 'inactive'}) }}" {% if filterStatus == 'inactive' %}selected{% endif %}>Désactivé</option>
+            </select>
+        </div>
 
         <table class="table table-bordered align-middle">
             <thead class="table-light">
