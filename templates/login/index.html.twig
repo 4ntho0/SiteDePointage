@@ -3,7 +3,6 @@
 {% block title %}Connexion{% endblock %}
 
 {% block body %}
-
 <style>
     body {
         margin: 0;
@@ -20,7 +19,7 @@
 
     .card-pointage {
         background: #ffffff;
-        padding: 40px;
+        padding: 40px 30px;
         width: 380px;
         border-radius: 12px;
         text-align: center;
@@ -28,24 +27,7 @@
     }
 
     .card-pointage h2 {
-        margin-bottom: 20px;
-    }
-
-    .actions {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        margin-top: 10px;
-    }
-
-    .btn {
-        padding: 15px;
-        font-size: 16px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        color: black;
-        background-color: #ececec;
+        margin-bottom: 25px;
     }
 
     .error {
@@ -53,6 +35,71 @@
         margin-bottom: 15px;
     }
 
+    /* Formulaire */
+    .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+    }
+
+    /* Input login */
+    .form-input {
+        width: 100%;
+        height: 50px;
+        padding: 0 15px;
+        border-radius: 8px;
+        border: none;
+        outline: none;
+        background-color: #ececec;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+    /* Input password avec bouton œil */
+    .input-group {
+        display: flex;
+        width: 100%;
+        height: 50px;
+    }
+
+    .password-field {
+        flex: 1;
+        padding: 0 15px;
+        border: none;
+        border-radius: 8px 0 0 8px;
+        background-color: #ececec;
+        font-size: 16px;
+        box-sizing: border-box;
+        text-align: left;
+        outline: none;
+    }
+
+    .toggle-password {
+        width: 50px;
+        border: none;
+        border-radius: 0 8px 8px 0;
+        background-color: #ececec;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        outline: none;
+    }
+
+    /* Bouton de connexion */
+    .form-submit {
+        height: 50px;
+        border-radius: 8px;
+        border: none;
+        background-color: #ececec;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .form-submit:hover {
+        background-color: #ddd;
+    }
 </style>
 
 <div class="page-pointage">
@@ -63,15 +110,38 @@
             <div class="error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
         {% endif %}
 
-        <form action="{{ path('app_login') }}" method="post">
-            <div class="actions">
-                <input type="text" name="_username" placeholder="Login" value="{{ last_username }}" required autofocus class="btn">
-                <input type="password" name="_password" placeholder="Password" required class="btn">
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-                <button type="submit" class="btn">Se connecter</button>
+        <form action="{{ path('app_login') }}" method="post" class="login-form">
+            <input type="text" name="_username" placeholder="Login" value="{{ last_username }}" required autofocus class="form-input">
+
+            <div class="input-group">
+                <input type="password" name="_password" placeholder="Password" required class="password-field">
+                <button type="button" class="toggle-password">
+                    <i class="bi bi-eye-slash"></i>
+                </button>
             </div>
+
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+            <button type="submit" class="form-submit">Se connecter</button>
         </form>
     </div>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', () => {
+                const input = button.closest('.input-group').querySelector('.password-field');
+                const icon = button.querySelector('i');
+
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.replace('bi-eye-slash', 'bi-eye');
+                } else {
+                    input.type = 'password';
+                    icon.classList.replace('bi-eye', 'bi-eye-slash');
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
