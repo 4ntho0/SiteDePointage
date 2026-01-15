@@ -48,7 +48,11 @@
                                 >
                                 Désactiver
                             </button>
-                            <form method="POST" action="{{ path('admin.utilisateurs.delete', {'id': u.id}) }}" style="display:inline-block;" onsubmit="return confirm('Supprimer cet utilisateur et tous ses pointages ?');">
+                            <form 
+                                method="POST" 
+                                action="{{ path('admin.utilisateurs.delete', {'id': u.id}) }}" 
+                                style="display:inline-block;" 
+                                onsubmit="return confirm('ATTENTION !!! Supprimer cet utilisateur entraînera la suppression de tous ses pointages ?');">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ u.id) }}">
                                 <button type="submit" class="btn btn-outline-danger btn-sm" title="Supprimer l'utilisateur">Supprimer</button>
                             </form>
@@ -64,28 +68,68 @@
             </tbody>
         </table>
     </div>
-    <!-- Modal créer un utilisateur-->
+
+    <!-- Modal créer un utilisateur -->
     <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <form method="POST" action="{{ path('admin.utilisateurs.add') }}">
+            <form method="POST" action="{{ path('admin.utilisateurs.add') }}" id="addUserForm" novalidate>
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Ajouter un utilisateur</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+
+                        <!-- Nom d'utilisateur -->
                         <div class="mb-3">
                             <label for="username" class="form-label">Nom d'utilisateur</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
+                            <input type="text" id="username" name="username" class="form-control" required>
+                            <div class="invalid-feedback">
+                                Veuillez renseigner ce champ.
+                            </div>
                         </div>
+
+                        <!-- Mot de passe -->
                         <div class="mb-3">
-                            <label for="password" class="form-label">Mot de passe</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <label class="form-label">Mot de passe</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control password-field" id="password" name="password" required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">
+                                Veuillez renseigner ce champ.
+                            </div>
                         </div>
+
+                        <!-- Confirmation mot de passe -->
                         <div class="mb-3">
-                            <label for="roles" class="form-label">Rôle</label>
-                            <input type="text" class="form-control" id="roles" name="roles" value="ROLE_USER">
+                            <label class="form-label">Confirmer le mot de passe</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control password-field" id="password_confirm" name="password_confirm" required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback" id="password-error">
+                                Les mots de passe ne correspondent pas.
+                            </div>
                         </div>
+
+                        <!-- Rôle -->
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Rôle</label>
+                            <select id="role" name="role" class="form-select" required>
+                                <option value="">Sélectionnez un rôle</option>
+                                <option value="ROLE_USER" selected>Utilisateur</option>
+                                <option value="ROLE_ADMIN">Administrateur</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Veuillez sélectionner un rôle.
+                            </div>
+                        </div>
+
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -95,4 +139,83 @@
             </form>
         </div>
     </div>
+
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const form = document.getElementById('addUserForm');
+            const username = document.getElementById('username');
+            const password = document.getElementById('password');
+            const confirm = document.getElementById('password_confirm');
+            const role = document.getElementById('role');
+            const passwordError = document.getElementById('password-error');
+
+            // Toggle mot de passe
+            document.querySelectorAll('.toggle-password').forEach(button => {
+                button.addEventListener('click', () => {
+                    const input = button.closest('.input-group').querySelector('.password-field');
+                    const icon = button.querySelector('i');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.replace('bi-eye-slash', 'bi-eye');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.replace('bi-eye', 'bi-eye-slash');
+                    }
+                });
+            });
+
+            // Validation au submit
+            form.addEventListener('submit', function (e) {
+                let valid = true;
+
+                // username
+                if (!username.value.trim()) {
+                    username.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    username.classList.remove('is-invalid');
+                }
+
+                // password
+                if (!password.value) {
+                    password.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    password.classList.remove('is-invalid');
+                }
+
+                // password confirmation
+                if (!confirm.value) {
+                    confirm.classList.add('is-invalid');
+                    passwordError.style.display = 'none'; // pas de message mdp différent si vide
+                    valid = false;
+                } else if (password.value !== confirm.value) {
+                    confirm.classList.add('is-invalid');
+                    passwordError.style.display = 'block';
+                    valid = false;
+                } else {
+                    confirm.classList.remove('is-invalid');
+                    passwordError.style.display = 'none';
+                }
+
+                // role
+                if (!role.value) {
+                    role.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    role.classList.remove('is-invalid');
+                }
+
+                if (!valid) {
+                    e.preventDefault(); // empêche l'envoi si erreur
+                }
+            });
+
+        });
+    </script>
+
+
 {% endblock %}

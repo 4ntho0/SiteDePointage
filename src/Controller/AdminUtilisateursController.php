@@ -33,17 +33,30 @@ class AdminUtilisateursController extends AbstractController {
     ): RedirectResponse {
         $username = $request->request->get('username');
         $plainPassword = $request->request->get('password');
-        $roles = $request->request->get('roles', 'ROLE_USER');
+        $passwordConfirm = $request->request->get('password_confirm');
+        $role = $request->request->get('role', 'ROLE_USER');
+
+        $allowedRoles = ['ROLE_USER', 'ROLE_ADMIN'];
+        if (!in_array($role, $allowedRoles, true)) {
+            $this->addFlash('error', 'Rôle invalide.');
+            return $this->redirectToRoute('admin.utilisateurs');
+        }
+
 
         if (!$username || !$plainPassword) {
             $this->addFlash('error', 'Nom d’utilisateur et mot de passe requis.');
             return $this->redirectToRoute('admin.utilisateurs');
         }
 
+        if ($plainPassword !== $passwordConfirm) {
+            $this->addFlash('error', 'Les mots de passe ne correspondent pas.');
+            return $this->redirectToRoute('admin.utilisateurs');
+        }
+
         $user = new User();
         $user->setUsername($username);
         $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
-        $user->setRoles(array_map('trim', explode(',', $roles)));
+        $user->setRoles([$role]);
 
         $em->persist($user);
         $em->flush();
@@ -61,10 +74,8 @@ class AdminUtilisateursController extends AbstractController {
             return $this->redirectToRoute('admin.utilisateurs');
         }
 
-        $em->remove($user); // tous ses pointages seront supprimés grâce à orphanRemoval
+        $em->remove($user);
         $em->flush();
-
-        $this->addFlash('success', 'Utilisateur et ses pointages supprimés avec succès.');
         return $this->redirectToRoute('admin.utilisateurs');
     }
 }
