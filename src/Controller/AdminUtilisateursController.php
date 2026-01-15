@@ -107,8 +107,7 @@ class AdminUtilisateursController extends AbstractController {
     }
 
     #[Route('/check-active', name: 'check_active')]
-    public function checkActive(): JsonResponse
-    {
+    public function checkActive(): JsonResponse {
         $user = $this->getUser();
 
         if (!$user || !$user->isActive()) {
@@ -119,4 +118,42 @@ class AdminUtilisateursController extends AbstractController {
         return $this->json(['active' => true]);
     }
 
+    #[Route('/admin/utilisateurs/password', name: 'admin.utilisateurs.password', methods: ['POST'])]
+    public function changePassword(
+            Request $request,
+            UserRepository $userRepository,
+            EntityManagerInterface $em,
+            UserPasswordHasherInterface $passwordHasher
+    ): RedirectResponse {
+
+        if (!$this->isCsrfTokenValid('change_password', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin.utilisateurs');
+        }
+
+        $userId = $request->request->get('user_id');
+        $password = $request->request->get('password');
+        $passwordConfirm = $request->request->get('password_confirm');
+
+        if ($password !== $passwordConfirm) {
+            $this->addFlash('error', 'Les mots de passe ne correspondent pas.');
+            return $this->redirectToRoute('admin.utilisateurs');
+        }
+
+        $user = $userRepository->find($userId);
+
+        if (!$user) {
+            $this->addFlash('error', 'Utilisateur introuvable.');
+            return $this->redirectToRoute('admin.utilisateurs');
+        }
+
+        $user->setPassword(
+                $passwordHasher->hashPassword($user, $password)
+        );
+
+        $em->flush();
+
+        $this->addFlash('success', 'Mot de passe modifié avec succès.');
+        return $this->redirectToRoute('admin.utilisateurs');
+    }
 }

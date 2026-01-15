@@ -60,10 +60,13 @@
                         </td>
                         <td class="text-center">
                             <button
-                                class="btn btn-outline-secondary btn-sm me-1"
-                                title="Changer le mot de passe"
+                                class="btn btn-outline-secondary btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#changePasswordModal"
+                                data-user-id="{{ u.id }}"
+                                data-username="{{ u.username }}"
                                 >
-                                Changer mdp
+                                Changer mot de passe
                             </button>
                             <form 
                                 method="POST" 
@@ -157,23 +160,88 @@
         </div>
     </div>
 
+    <!-- Modal changer mot de passe -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form method="POST"
+                  action="{{ path('admin.utilisateurs.password') }}"
+                  id="changePasswordForm"
+                  novalidate>
 
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Changer le mot de passe</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <input type="hidden" name="user_id" id="passwordUserId">
+                        <input type="hidden" name="_token" value="{{ csrf_token('change_password') }}">
+
+                        <div class="mb-3">
+                            <label class="form-label">Utilisateur</label>
+                            <input type="text" class="form-control" id="passwordUsername" disabled>
+                        </div>
+
+                        <!-- Nouveau mot de passe -->
+                        <div class="mb-3">
+                            <label class="form-label">Nouveau mot de passe</label>
+                            <div class="input-group">
+                                <input type="password"
+                                       id="change_password"
+                                       name="password"
+                                       class="form-control password-field"
+                                       required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">
+                                Veuillez renseigner ce champ.
+                            </div>
+                        </div>
+
+                        <!-- Confirmation -->
+                        <div class="mb-3">
+                            <label class="form-label">Confirmation</label>
+                            <div class="input-group">
+                                <input type="password"
+                                       id="change_password_confirm"
+                                       name="password_confirm"
+                                       class="form-control password-field"
+                                       required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback" id="change-password-error">
+                                Les mots de passe ne correspondent pas.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Modifier</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
-            const form = document.getElementById('addUserForm');
-            const username = document.getElementById('username');
-            const password = document.getElementById('password');
-            const confirm = document.getElementById('password_confirm');
-            const role = document.getElementById('role');
-            const passwordError = document.getElementById('password-error');
-
-            // Toggle mot de passe
+            /* ==========================
+             Toggle afficher / masquer
+             ========================== */
             document.querySelectorAll('.toggle-password').forEach(button => {
                 button.addEventListener('click', () => {
                     const input = button.closest('.input-group').querySelector('.password-field');
                     const icon = button.querySelector('i');
+
                     if (input.type === 'password') {
                         input.type = 'text';
                         icon.classList.replace('bi-eye-slash', 'bi-eye');
@@ -184,56 +252,55 @@
                 });
             });
 
-            // Validation au submit
-            form.addEventListener('submit', function (e) {
+            /* ==========================
+             Injection utilisateur modal MDP
+             ========================== */
+            document.getElementById('changePasswordModal')
+                    .addEventListener('show.bs.modal', function (event) {
+
+                        const button = event.relatedTarget;
+                        document.getElementById('passwordUserId').value =
+                                button.getAttribute('data-user-id');
+                        document.getElementById('passwordUsername').value =
+                                button.getAttribute('data-username');
+                    });
+
+            /* ==========================
+             Validation changer mot de passe
+             ========================== */
+            const changeForm = document.getElementById('changePasswordForm');
+            const newPassword = document.getElementById('change_password');
+            const confirmPassword = document.getElementById('change_password_confirm');
+            const error = document.getElementById('change-password-error');
+
+            changeForm.addEventListener('submit', function (e) {
                 let valid = true;
 
-                // username
-                if (!username.value.trim()) {
-                    username.classList.add('is-invalid');
+                if (!newPassword.value) {
+                    newPassword.classList.add('is-invalid');
                     valid = false;
                 } else {
-                    username.classList.remove('is-invalid');
+                    newPassword.classList.remove('is-invalid');
                 }
 
-                // password
-                if (!password.value) {
-                    password.classList.add('is-invalid');
+                if (!confirmPassword.value) {
+                    confirmPassword.classList.add('is-invalid');
+                    error.style.display = 'none';
+                    valid = false;
+                } else if (newPassword.value !== confirmPassword.value) {
+                    confirmPassword.classList.add('is-invalid');
+                    error.style.display = 'block';
                     valid = false;
                 } else {
-                    password.classList.remove('is-invalid');
-                }
-
-                // password confirmation
-                if (!confirm.value) {
-                    confirm.classList.add('is-invalid');
-                    passwordError.style.display = 'none'; // pas de message mdp différent si vide
-                    valid = false;
-                } else if (password.value !== confirm.value) {
-                    confirm.classList.add('is-invalid');
-                    passwordError.style.display = 'block';
-                    valid = false;
-                } else {
-                    confirm.classList.remove('is-invalid');
-                    passwordError.style.display = 'none';
-                }
-
-                // role
-                if (!role.value) {
-                    role.classList.add('is-invalid');
-                    valid = false;
-                } else {
-                    role.classList.remove('is-invalid');
+                    confirmPassword.classList.remove('is-invalid');
+                    error.style.display = 'none';
                 }
 
                 if (!valid) {
-                    e.preventDefault(); // empêche l'envoi si erreur
+                    e.preventDefault();
                 }
             });
-
         });
-
     </script>
-
 
 {% endblock %}
