@@ -1,92 +1,160 @@
 {% extends "base.html.twig" %}
 
 {% block body %}
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0d001c, #1e1e1e);
+        }
+
+        .page-pointage {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card-pointage {
+            position: relative;
+            background: #ffffff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 900px;
+        }
+
+        h5 {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .table th, .table td {
+            vertical-align: middle !important;
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .btn-add {
+            background-color: #7b9acc;
+            color: #fff;
+        }
+
+        .btn-logout {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 14px;
+            color: #888;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .btn-logout:hover {
+            color: #000;
+        }
+
+        .actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 0.8rem;
+        }
+    </style>
+
+    <div class="page-pointage">
+        <div class="card-pointage">
+            <a href="#" class="btn-logout">Déconnexion</a>
             <h5>Gestion des utilisateurs</h5>
-            <div>
-                <a href="#" class="btn btn-success btn-sm me-2" title="Ajouter un utilisateur" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                    Ajouter utilisateur
-                </a>
-                <a href="{{ path('admin.pointage') }}" class="btn btn-secondary btn-sm" title="Voir la page des pointages">
-                    Pointages
-                </a>
+
+            <div class="d-flex mb-3 align-items-center justify-content-between"><!-- Partie gauche : label + select -->
+                <div class="d-flex align-items-center">
+                    <label for="filterStatus" class="me-2 mb-0">Filtrer par état :</label>
+                    <select id="filterStatus" class="form-select form-select-sm w-auto"
+                            onchange="location = this.value;">
+                        <option value="{{ path('admin.utilisateurs', {'status': 'all'}) }}" {% if filterStatus == 'all' %}selected{% endif %}>Tous</option>              
+                        <option value="{{ path('admin.utilisateurs', {'status': 'active'}) }}" {% if filterStatus == 'active' %}selected{% endif %}>Activé</option>               
+                        <option value="{{ path('admin.utilisateurs', {'status': 'inactive'}) }}" {% if filterStatus == 'inactive' %}selected{% endif %}>Désactivé</option>
+                    </select>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="#" class="btn btn-add btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">Ajouter utilisateur</a>
+                    <a href="{{ path('admin.pointage') }}" class="btn btn-add btn-sm">Pointages</a>
+                </div>
             </div>
-        </div>
-        <div class="d-flex mb-3 align-items-center">
-            <label for="filterStatus" class="me-2">Filtrer par état :</label>
-            <select id="filterStatus" class="form-select form-select-sm w-auto"
-                    onchange="location = this.value;">
-                <option value="{{ path('admin.utilisateurs', {'status': 'all'}) }}" {% if filterStatus == 'all' %}selected{% endif %}>Tous</option>              
-                <option value="{{ path('admin.utilisateurs', {'status': 'active'}) }}" {% if filterStatus == 'active' %}selected{% endif %}>Activé</option>               
-                <option value="{{ path('admin.utilisateurs', {'status': 'inactive'}) }}" {% if filterStatus == 'inactive' %}selected{% endif %}>Désactivé</option>
-            </select>
-        </div>
-
-        <table class="table table-bordered align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Utilisateur</th>
-                    <th>Rôles</th>
-                    <th>État</th>
-                    <th class="text-center">Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for u in users %}
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
                     <tr>
-                        <td>{{ u.username }}</td>
-
-                        <td>
-                            {% for role in u.roles %}
-                                <span class="badge bg-secondary me-1">
-                                    {{ role }}
-                                </span>
-                            {% endfor %}
-                        </td>
-                        <td>
-                            <form method="POST" action="{{ path('admin.utilisateurs.toggle', {'id': u.id}) }}" 
-                                  style="display:inline-block"
-                                  onsubmit="return confirm('{{ u.isActive ? 'Un utilisateur désactivé ne pourra plus se connecter mais vous aurez toujours accès à ses anciens pointages.' : 'Voulez-vous réactiver cet utilisateur ?' }}');"
-                                  >
-                                <input type="hidden" name="_token" value="{{ csrf_token('toggle_user_' ~ u.id) }}">
-                                {% if u.isActive %}
-                                    <button type="submit" class="btn btn-success btn-sm">Activé</button>
-                                {% else %}
-                                    <button type="submit" class="btn btn-danger btn-sm">Désactivé</button>
-                                {% endif %}
-                            </form>
-                        </td>
-                        <td class="text-center">
-                            <button
-                                class="btn btn-outline-secondary btn-sm"
-                                data-bs-toggle="modal"
-                                data-bs-target="#changePasswordModal"
-                                data-user-id="{{ u.id }}"
-                                data-username="{{ u.username }}"
-                                >
-                                Changer mot de passe
-                            </button>
-                            <form 
-                                method="POST" 
-                                action="{{ path('admin.utilisateurs.delete', {'id': u.id}) }}" 
-                                style="display:inline-block;" 
-                                onsubmit="return confirm('ATTENTION !!! Supprimer cet utilisateur entraînera la suppression de tous ses pointages ?');">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ u.id) }}">
-                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Supprimer l'utilisateur">Supprimer</button>
-                            </form>
-                        </td>
+                        <th>Utilisateur</th>
+                        <th>Rôles</th>
+                        <th>État</th>
+                        <th class="text-center">Actions</th>
                     </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="3" class="text-center text-muted">
-                            Aucun utilisateur
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                        <tr>
+                            <td>{{ u.username }}</td>
+                            <td>
+                                {% for role in u.roles %}
+                                    <span class="badge bg-secondary me-1">{{ role }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ path('admin.utilisateurs.toggle', {'id': u.id}) }}" 
+                                      style="display:inline-block"
+                                      onsubmit="return confirm('{{ u.isActive ? 'Un utilisateur désactivé ne pourra plus se connecter mais vous aurez toujours accès à ses anciens pointages.' : 'Voulez-vous réactiver cet utilisateur ?' }}');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('toggle_user_' ~ u.id) }}">
+                                    {% if u.isActive %}
+                                        <button type="submit" class="btn btn-success btn-sm">Activé</button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-danger btn-sm">Désactivé</button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                            <td class="text-center actions">
+                                <button
+                                    class="btn btn-outline-secondary btn-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#changePasswordModal"
+                                    data-user-id="{{ u.id }}"
+                                    data-username="{{ u.username }}">
+                                    Changer mot de passe
+                                </button>
+                                <form 
+                                    method="POST" 
+                                    action="{{ path('admin.utilisateurs.delete', {'id': u.id}) }}" 
+                                    style="display:inline-block;" 
+                                    onsubmit="return confirm('ATTENTION !!! Supprimer cet utilisateur entraînera la suppression de tous ses pointages ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ u.id) }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Supprimer l'utilisateur">Supprimer</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Aucun utilisateur</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Modal créer un utilisateur -->
@@ -99,27 +167,21 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-
                         <!-- Nom d'utilisateur -->
                         <div class="mb-3">
                             <label for="username" class="form-label">Nom d'utilisateur</label>
                             <input type="text" id="username" name="username" class="form-control" required>
-                            <div class="invalid-feedback">
-                                Veuillez renseigner ce champ.
-                            </div>
+                            <div class="invalid-feedback">Veuillez renseigner ce champ.</div>
                         </div>
-
                         <!-- Mot de passe -->
                         <div class="mb-3">
                             <label class="form-label">Mot de passe</label>
                             <div class="input-group">
-                                <input type="password" class="form-control password-field" id="password" name="password" required>
+                                <input type="password" id="password" name="password" class="form-control password-field" required>
                                 <button class="btn btn-outline-secondary toggle-password" type="button">
                                     <i class="bi bi-eye-slash"></i>
                                 </button>
-                            </div>
-                            <div class="invalid-feedback">
-                                Veuillez renseigner ce champ.
+                                <div class="invalid-feedback">Veuillez renseigner ce champ.</div>
                             </div>
                         </div>
 
@@ -127,16 +189,13 @@
                         <div class="mb-3">
                             <label class="form-label">Confirmer le mot de passe</label>
                             <div class="input-group">
-                                <input type="password" class="form-control password-field" id="password_confirm" name="password_confirm" required>
+                                <input type="password" id="password_confirm" name="password_confirm" class="form-control password-field" required>
                                 <button class="btn btn-outline-secondary toggle-password" type="button">
                                     <i class="bi bi-eye-slash"></i>
                                 </button>
-                            </div>
-                            <div class="invalid-feedback" id="password-error">
-                                Les mots de passe ne correspondent pas.
+                                <div class="invalid-feedback" id="password-error">Les mots de passe ne correspondent pas.</div>
                             </div>
                         </div>
-
                         <!-- Rôle -->
                         <div class="mb-3">
                             <label for="role" class="form-label">Rôle</label>
@@ -149,7 +208,6 @@
                                 Veuillez sélectionner un rôle.
                             </div>
                         </div>
-
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -178,6 +236,7 @@
                         <input type="hidden" name="user_id" id="passwordUserId">
                         <input type="hidden" name="_token" value="{{ csrf_token('change_password') }}">
 
+                        <!-- Utilisateur -->
                         <div class="mb-3">
                             <label class="form-label">Utilisateur</label>
                             <input type="text" class="form-control" id="passwordUsername" disabled>
@@ -231,17 +290,17 @@
         </div>
     </div>
 
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
-            /* ==========================
-             Toggle afficher / masquer
-             ========================== */
+            /* ======================
+             Toggle afficher / masquer tous les champs password
+             ====================== */
             document.querySelectorAll('.toggle-password').forEach(button => {
-                button.addEventListener('click', () => {
+                button.addEventListener('click', function () {
                     const input = button.closest('.input-group').querySelector('.password-field');
                     const icon = button.querySelector('i');
-
                     if (input.type === 'password') {
                         input.type = 'text';
                         icon.classList.replace('bi-eye-slash', 'bi-eye');
@@ -252,55 +311,107 @@
                 });
             });
 
-            /* ==========================
-             Injection utilisateur modal MDP
-             ========================== */
-            document.getElementById('changePasswordModal')
-                    .addEventListener('show.bs.modal', function (event) {
+            /* ======================
+             Validation formulaire création utilisateur
+             ====================== */
+            const addUserForm = document.getElementById('addUserForm');
+            if (addUserForm) {
+                const username = document.getElementById('username');
+                const password = document.getElementById('password');
+                const passwordConfirm = document.getElementById('password_confirm');
+                const role = document.getElementById('role');
+                const passwordError = document.getElementById('password-error');
 
-                        const button = event.relatedTarget;
-                        document.getElementById('passwordUserId').value =
-                                button.getAttribute('data-user-id');
-                        document.getElementById('passwordUsername').value =
-                                button.getAttribute('data-username');
-                    });
+                addUserForm.addEventListener('submit', function (e) {
+                    let valid = true;
 
-            /* ==========================
-             Validation changer mot de passe
-             ========================== */
-            const changeForm = document.getElementById('changePasswordForm');
-            const newPassword = document.getElementById('change_password');
-            const confirmPassword = document.getElementById('change_password_confirm');
-            const error = document.getElementById('change-password-error');
+                    if (!username.value.trim()) {
+                        username.classList.add('is-invalid');
+                        valid = false;
+                    } else {
+                        username.classList.remove('is-invalid');
+                    }
 
-            changeForm.addEventListener('submit', function (e) {
-                let valid = true;
+                    if (!password.value) {
+                        password.classList.add('is-invalid');
+                        valid = false;
+                    } else {
+                        password.classList.remove('is-invalid');
+                    }
 
-                if (!newPassword.value) {
-                    newPassword.classList.add('is-invalid');
-                    valid = false;
-                } else {
-                    newPassword.classList.remove('is-invalid');
-                }
+                    if (!passwordConfirm.value) {
+                        passwordConfirm.classList.add('is-invalid');
+                        passwordError.style.display = 'none';
+                        valid = false;
+                    } else if (password.value !== passwordConfirm.value) {
+                        passwordConfirm.classList.add('is-invalid');
+                        passwordError.style.display = 'block';
+                        valid = false;
+                    } else {
+                        passwordConfirm.classList.remove('is-invalid');
+                        passwordError.style.display = 'none';
+                    }
 
-                if (!confirmPassword.value) {
-                    confirmPassword.classList.add('is-invalid');
-                    error.style.display = 'none';
-                    valid = false;
-                } else if (newPassword.value !== confirmPassword.value) {
-                    confirmPassword.classList.add('is-invalid');
-                    error.style.display = 'block';
-                    valid = false;
-                } else {
-                    confirmPassword.classList.remove('is-invalid');
-                    error.style.display = 'none';
-                }
+                    if (!role.value) {
+                        role.classList.add('is-invalid');
+                        valid = false;
+                    } else {
+                        role.classList.remove('is-invalid');
+                    }
 
-                if (!valid) {
-                    e.preventDefault();
-                }
-            });
+                    if (!valid)
+                        e.preventDefault();
+                });
+            }
+
+            /* ======================
+             Injection utilisateur et validation modal changer mot de passe
+             ====================== */
+            const changeModal = document.getElementById('changePasswordModal');
+            if (changeModal) {
+                const changeForm = document.getElementById('changePasswordForm');
+                const newPassword = document.getElementById('change_password');
+                const confirmPassword = document.getElementById('change_password_confirm');
+                const error = document.getElementById('change-password-error');
+
+                // Injection du nom d’utilisateur à l’ouverture
+                changeModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    document.getElementById('passwordUserId').value = button.getAttribute('data-user-id');
+                    document.getElementById('passwordUsername').value = button.getAttribute('data-username');
+                });
+
+                // Validation du formulaire
+                changeForm.addEventListener('submit', function (e) {
+                    let valid = true;
+
+                    if (!newPassword.value) {
+                        newPassword.classList.add('is-invalid');
+                        valid = false;
+                    } else {
+                        newPassword.classList.remove('is-invalid');
+                    }
+
+                    if (!confirmPassword.value) {
+                        confirmPassword.classList.add('is-invalid');
+                        error.style.display = 'none';
+                        valid = false;
+                    } else if (newPassword.value !== confirmPassword.value) {
+                        confirmPassword.classList.add('is-invalid');
+                        error.style.display = 'block';
+                        valid = false;
+                    } else {
+                        confirmPassword.classList.remove('is-invalid');
+                        error.style.display = 'none';
+                    }
+
+                    if (!valid)
+                        e.preventDefault();
+                });
+            }
+
         });
+
     </script>
 
 {% endblock %}
