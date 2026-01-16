@@ -79,7 +79,7 @@
     </style>
 
     <div class="page-pointage">
-        <div class="card-pointage">
+        <div class="card-pointage" data-admin-id="{{ app.user.id }}">
             <a href="#" class="btn-logout">Déconnexion</a>
             <h5>Gestion des utilisateurs</h5>
 
@@ -137,14 +137,13 @@
                                     data-username="{{ u.username }}">
                                     Changer mot de passe
                                 </button>
-                                <form 
-                                    method="POST" 
-                                    action="{{ path('admin.utilisateurs.delete', {'id': u.id}) }}" 
-                                    style="display:inline-block;" 
-                                    onsubmit="return confirm('ATTENTION !!! Supprimer cet utilisateur entraînera la suppression de tous ses pointages ?');">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ u.id) }}">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Supprimer l'utilisateur">Supprimer</button>
-                                </form>
+                                <button class="btn btn-danger btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteUserModal"
+                                        data-user-id="{{ u.id }}"
+                                        data-username="{{ u.username }}">
+                                    Supprimer
+                                </button>
                             </td>
                         </tr>
                     {% else %}
@@ -290,13 +289,51 @@
         </div>
     </div>
 
+    <div class="modal fade" id="deleteUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="POST" action="{{ path('admin.utilisateurs.delete') }}" id="deleteUserForm" novalidate>
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">Confirmation de suppression</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
 
+                    <div class="modal-body">
+                        <input type="hidden" name="user_id" id="deleteUserId">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete_user') }}">
+
+                        ⚠️ <strong>Attention</strong><br>
+                        Vous êtes sur le point de supprimer l’utilisateur :
+                        <strong id="deleteUsername"></strong><br><br>
+                        Cette action est <strong>irréversible</strong>.<br>
+                        Tous les pointages de cet utilisateur seront également supprimés.
+
+                        <hr>
+
+                        <label class="form-label">Mot de passe administrateur</label>
+                        <div class="input-group">
+                            <input type="password" name="admin_password" id="adminPassword" class="form-control password-field" required>
+                            <button type="button" class="btn btn-outline-secondary toggle-password">
+                                <i class="bi bi-eye-slash"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback" id="admin-password-error" style="display:none;"></div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
-            /* ======================
-             Toggle afficher / masquer tous les champs password
-             ====================== */
+            // ======================
+            // Toggle afficher / masquer tous les champs password
+            // ======================
             document.querySelectorAll('.toggle-password').forEach(button => {
                 button.addEventListener('click', function () {
                     const input = button.closest('.input-group').querySelector('.password-field');
@@ -311,9 +348,9 @@
                 });
             });
 
-            /* ======================
-             Validation formulaire création utilisateur
-             ====================== */
+            // ======================
+            // Validation création utilisateur
+            // ======================
             const addUserForm = document.getElementById('addUserForm');
             if (addUserForm) {
                 const username = document.getElementById('username');
@@ -364,9 +401,9 @@
                 });
             }
 
-            /* ======================
-             Injection utilisateur et validation modal changer mot de passe
-             ====================== */
+            // ======================
+            // Validation changement mot de passe
+            // ======================
             const changeModal = document.getElementById('changePasswordModal');
             if (changeModal) {
                 const changeForm = document.getElementById('changePasswordForm');
@@ -374,14 +411,12 @@
                 const confirmPassword = document.getElementById('change_password_confirm');
                 const error = document.getElementById('change-password-error');
 
-                // Injection du nom d’utilisateur à l’ouverture
                 changeModal.addEventListener('show.bs.modal', function (event) {
                     const button = event.relatedTarget;
                     document.getElementById('passwordUserId').value = button.getAttribute('data-user-id');
                     document.getElementById('passwordUsername').value = button.getAttribute('data-username');
                 });
 
-                // Validation du formulaire
                 changeForm.addEventListener('submit', function (e) {
                     let valid = true;
 
@@ -410,8 +445,82 @@
                 });
             }
 
-        });
+            // ======================
+            // Modal suppression utilisateur
+            // ======================
+            const deleteModal = document.getElementById('deleteUserModal');
+            const deleteForm = document.getElementById('deleteUserForm');
+            const adminId = document.querySelector('.card-pointage').dataset.adminId;
 
+            if (deleteModal) {
+                deleteModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const userId = button.getAttribute('data-user-id');
+
+                    if (userId === adminId) {
+                        event.preventDefault();
+                        alert("⚠️ Vous ne pouvez pas supprimer votre propre compte !");
+                        return;
+                    }
+
+                    document.getElementById('deleteUserId').value = userId;
+                    document.getElementById('deleteUsername').textContent = button.getAttribute('data-username');
+
+                    const adminPassword = document.getElementById('adminPassword');
+                    const adminPasswordError = document.getElementById('admin-password-error');
+                    adminPassword.value = '';
+                    adminPassword.classList.remove('is-invalid');
+                    adminPasswordError.style.display = 'none';
+                });
+
+                deleteForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    const adminPassword = document.getElementById('adminPassword');
+                    const adminPasswordError = document.getElementById('admin-password-error');
+                    const userId = document.getElementById('deleteUserId').value;
+                    const token = deleteForm.querySelector('input[name="_token"]').value;
+
+                    if (!adminPassword.value.trim()) {
+                        adminPassword.classList.add('is-invalid');
+                        adminPasswordError.textContent = "Veuillez saisir votre mot de passe pour confirmer.";
+                        adminPasswordError.style.display = 'block';
+                        return;
+                    }
+
+                    // Vérification mot de passe via fetch
+                    fetch("{{ path('admin.utilisateurs.delete') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-Requested-With": "XMLHttpRequest"
+                        },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            admin_password: adminPassword.value,
+                            _token: token
+                        })
+                    })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    window.location.reload();
+                                } else {
+                                    adminPassword.classList.add('is-invalid');
+                                    adminPasswordError.textContent = data.message || "Mot de passe incorrect.";
+                                    adminPasswordError.style.display = 'block';
+                                }
+                            })
+                            .catch(() => {
+                                adminPassword.classList.add('is-invalid');
+                                adminPasswordError.textContent = "Une erreur est survenue.";
+                                adminPasswordError.style.display = 'block';
+                            });
+                });
+            }
+
+        });
     </script>
+
 
 {% endblock %}

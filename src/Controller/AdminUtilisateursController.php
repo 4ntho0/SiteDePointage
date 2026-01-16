@@ -2,18 +2,17 @@
 
 namespace App\Controller;
 
-use App\Repository\UserRepository;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Security\Csrf\CsrfToken;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Core\Security;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\UserRepository;
 use App\Entity\User;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AdminUtilisateursController extends AbstractController {
 
@@ -75,18 +74,39 @@ class AdminUtilisateursController extends AbstractController {
         return $this->redirectToRoute('admin.utilisateurs');
     }
 
-    #[Route('/admin/utilisateurs/delete/{id}', name: 'admin.utilisateurs.delete', methods: ['POST'])]
-    public function delete(User $user, EntityManagerInterface $em, Request $request): RedirectResponse {
-        $submittedToken = $request->request->get('_token');
+    #[Route('/admin/utilisateurs/delete', name: 'admin.utilisateurs.delete', methods: ['POST'])]
+    public function deleteUser(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, Security $security): JsonResponse {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
-        if (!$this->isCsrfTokenValid('delete_user_' . $user->getId(), $submittedToken)) {
-            $this->addFlash('error', 'Token CSRF invalide.');
-            return $this->redirectToRoute('admin.utilisateurs');
+        $data = json_decode($request->getContent(), true);
+        $userId = $data['user_id'] ?? null;
+        $adminPassword = $data['admin_password'] ?? '';
+        $token = $data['_token'] ?? '';
+
+        if (!$this->isCsrfTokenValid('delete_user', $token)) {
+            return $this->json(['success' => false, 'message' => 'Token CSRF invalide.']);
+        }
+
+        /** @var User $admin */
+        $admin = $security->getUser();
+
+        if (!$admin || !$passwordHasher->isPasswordValid($admin, $adminPassword)) {
+            return $this->json(['success' => false, 'message' => 'Mot de passe administrateur incorrect.']);
+        }
+
+        $user = $em->getRepository(User::class)->find($userId);
+        if (!$user) {
+            return $this->json(['success' => false, 'message' => 'Utilisateur introuvable.']);
+        }
+
+        if ($user->getId() === $admin->getId()) {
+            return $this->json(['success' => false, 'message' => 'Vous ne pouvez pas supprimer votre propre compte.']);
         }
 
         $em->remove($user);
         $em->flush();
-        return $this->redirectToRoute('admin.utilisateurs');
+
+        return $this->json(['success' => true]);
     }
 
     #[Route('/admin/utilisateurs/toggle/{id}', name: 'admin.utilisateurs.toggle', methods: ['POST'])]
