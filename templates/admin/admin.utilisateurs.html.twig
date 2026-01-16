@@ -121,7 +121,7 @@
                                       style="display:inline-block"
                                       onsubmit="
                                       {% if u.id == app.user.id %}
-                                              alert('⚠️ Vous ne pouvez pas désactiver votre propre compte.');
+                                              alert('⚠️ Vous ne pouvez pas désactiver votre propre compte.＼（〇_ｏ）／');
                                               return false;
                                       {% else %}
                                               return confirm('{{ u.isActive ? 'Un utilisateur désactivé ne pourra plus se connecter mais vous aurez toujours accès à ses anciens pointages.' : 'Voulez-vous réactiver cet utilisateur ?' }}');
@@ -467,7 +467,7 @@
 
                     if (userId === adminId) {
                         event.preventDefault();
-                        alert("⚠️ Vous ne pouvez pas supprimer votre propre compte !");
+                        alert("⚠️ Vous ne pouvez pas supprimer votre propre compte ! ＼（〇_ｏ）／");
                         return;
                     }
 
