@@ -4,39 +4,129 @@
 
     <div class="container mt-4">
         <h5>Liste des pointages</h5>
+        <div class="d-flex align-items-center gap-4 mb-3">
+
+            {# Utilisateur #}
+            <div class="d-flex align-items-center gap-2">
+                <span class="small">Utilisateur</span>
+                <select class="form-select form-select-sm"
+                        onchange="location = this.value;">
+                    <option value="{{ path('admin.pointage', {'sort': sortField, 'order': sortOrder}) }}"
+                            {% if not userFilter %}selected{% endif %}>
+                        Tous
+                    </option>
+                    {% for u in users %}
+                        <option value="{{ path('admin.pointage', {
+                    'sort': sortField,
+                    'order': sortOrder,
+                    'user': u.username
+                }) }}"
+                                {% if userFilter == u.username %}selected{% endif %}>
+                            {{ u.username }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# Tri croissant / décroissant #}
+            <div class="d-flex align-items-center gap-2">
+                <select
+                    class="form-select form-select-sm"
+                    onchange="window.location.href = this.value"
+                    >
+                    <option
+                        value="{{ path('admin.pointage', {
+                sort: 'datePointage',
+                order: 'ASC',
+                user: userFilter
+            }) }}"
+                        {% if app.request.get('order') == 'ASC' %}selected{% endif %}
+                        >
+                        Du plus ancien au plus récent
+                    </option>
+
+                    <option
+                        value="{{ path('admin.pointage', {
+                sort: 'datePointage',
+                order: 'DESC',
+                user: userFilter
+            }) }}"
+                        {% if app.request.get('order') == 'DESC' or app.request.get('order') is empty %}selected{% endif %}
+                        >
+                        Du plus récent au plus ancien
+                    </option>
+                </select>
+            </div>
+
+
+            {# Période #}
+            <div class="d-flex align-items-center gap-2">
+                <span class="small">Période</span>
+                <select class="form-select form-select-sm" name="period">
+                    <option value="day">Jour</option>
+                    <option value="week">Semaine</option>
+                    <option value="month">Mois</option>
+                    <option value="year">Année</option>
+                    <option value="global">Tout</option>
+                </select>
+            </div>
+
+            {# Date début #}
+            <div class="d-flex align-items-center gap-2">
+                <span class="small">Du</span>
+                <input type="date" class="form-control form-control-sm"
+                       name="date_start">
+            </div>
+
+            {# Date fin #}
+            <div class="d-flex align-items-center gap-2">
+                <span class="small">Au</span>
+                <input type="date" class="form-control form-control-sm"
+                       name="date_end">
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ path('admin.utilisateurs') }}" class="btn btn-secondary btn-sm ">Gestion des Utilisateurs</a>
+            </div>
+
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center mt-3 gap-2">
+            <span class="small">Nombre de Lignes :</span>
+            <select class="form-select form-select-sm" style="width: auto;" onchange="window.location.href = this.value">
+                {% set basePath = path('admin.pointage', {
+            'sort': sortField,
+            'order': sortOrder,
+            'user': userFilter
+        }) %}
+                <option value="{{ basePath ~ '&limit=25&page=1' }}" {% if limit == 25 %}selected{% endif %}>25</option>
+                <option value="{{ basePath ~ '&limit=50&page=1' }}" {% if limit == 50 %}selected{% endif %}>50</option>
+                <option value="{{ basePath ~ '&limit=100&page=1' }}" {% if limit == 100 %}selected{% endif %}>100</option>
+                <option value="{{ basePath ~ '&limit=250&page=1' }}" {% if limit == 250 %}selected{% endif %}>250</option>
+                <option value="{{ basePath ~ '&limit=500&page=1' }}" {% if limit == 500 %}selected{% endif %}>500</option>
+                <option value="{{ basePath ~ '&limit=10000&page=1' }}" {% if limit == 10000 %}selected{% endif %}>Max</option>
+            </select>
+
+            <div class="btn-group btn-group-sm">
+                {# << : première page #}
+                <a class="btn btn-outline-secondary {% if page == 1 %}disabled{% endif %}" href="{{ basePath ~ '&limit=' ~ limit ~ '&page=1' }}"><<</a>
+                {# < : page précédente #}
+                <a class="btn btn-outline-secondary {% if page == 1 %}disabled{% endif %}" href="{{ basePath ~ '&limit=' ~ limit ~ '&page=' ~ (page - 1) }}"> < </a>
+                <span class="btn btn-light disabled">Page {{ page }}/{{ totalPages }}</span>
+                {# > : page suivante #}
+                <a class="btn btn-outline-secondary {% if page == totalPages %}disabled{% endif %}" href="{{ basePath ~ '&limit=' ~ limit ~ '&page=' ~ (page + 1) }}"> > </a>
+                {# >> : dernière page #}
+                <a class="btn btn-outline-secondary {% if page == totalPages %}disabled{% endif %}" href="{{ basePath ~ '&limit=' ~ limit ~ '&page=' ~ totalPages }}">>></a>
+            </div>
+        </div>
+
+
+
         <table class="table table-striped align-middle">
             <thead>
                 <tr>
-                    <th class="text-start">
-                        <div class="d-flex flex-column">
-                            <span>Utilisateur</span>
-                            <select class="form-select form-select-sm mt-1" onchange="location = this.value;">
-                                <option value="{{ path('admin.pointage', {'sort': sortField, 'order': sortOrder}) }}"
-                                        {% if not userFilter %}selected{% endif %}>
-                                    Tous
-                                </option>
-                                {% for u in users %}
-                                    <option value="{{ path('admin.pointage', {'sort': sortField, 'order': sortOrder, 'user': u.username}) }}"
-                                            {% if userFilter == u.username %}selected{% endif %}>
-                                        {{ u.username }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </th>
-
-                    <th class="text-center">
-                        <div class="d-flex flex-column align-items-center">
-                            <span>Date</span>
-                            <div class="btn-group btn-group-sm mt-1">
-                                <a href="{{ path('admin.pointage', {'sort': 'datePointage', 'order': 'ASC', 'user': userFilter}) }}"
-                                   class="btn btn-outline-secondary" title="Tri du plus ancien au plus récent">▼</a>
-                                <a href="{{ path('admin.pointage', {'sort': 'datePointage', 'order': 'DESC', 'user': userFilter}) }}"
-                                   class="btn btn-outline-secondary" title="Tri du plus récent au plus ancien">▲</a>
-
-                            </div>
-                        </div>
-                    </th>
+                    <th class="text-center">Utilisateur</th>
+                    <th class="text-center">Date</th>
                     <th class="text-center">Entrée</th>
                     <th class="text-center">Début pause</th>
                     <th class="text-center">Fin pause</th>
