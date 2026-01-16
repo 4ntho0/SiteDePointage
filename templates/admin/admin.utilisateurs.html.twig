@@ -119,7 +119,14 @@
                             <td>
                                 <form method="POST" action="{{ path('admin.utilisateurs.toggle', {'id': u.id}) }}" 
                                       style="display:inline-block"
-                                      onsubmit="return confirm('{{ u.isActive ? 'Un utilisateur désactivé ne pourra plus se connecter mais vous aurez toujours accès à ses anciens pointages.' : 'Voulez-vous réactiver cet utilisateur ?' }}');">
+                                      onsubmit="
+                                      {% if u.id == app.user.id %}
+                                              alert('⚠️ Vous ne pouvez pas désactiver votre propre compte.');
+                                              return false;
+                                      {% else %}
+                                              return confirm('{{ u.isActive ? 'Un utilisateur désactivé ne pourra plus se connecter mais vous aurez toujours accès à ses anciens pointages.' : 'Voulez-vous réactiver cet utilisateur ?' }}');
+                                      {% endif %}
+                                      ">
                                     <input type="hidden" name="_token" value="{{ csrf_token('toggle_user_' ~ u.id) }}">
                                     {% if u.isActive %}
                                         <button type="submit" class="btn btn-success btn-sm">Activé</button>
@@ -127,6 +134,7 @@
                                         <button type="submit" class="btn btn-danger btn-sm">Désactivé</button>
                                     {% endif %}
                                 </form>
+
                             </td>
                             <td class="text-center actions">
                                 <button

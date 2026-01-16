@@ -110,11 +110,20 @@ class AdminUtilisateursController extends AbstractController {
     }
 
     #[Route('/admin/utilisateurs/toggle/{id}', name: 'admin.utilisateurs.toggle', methods: ['POST'])]
-    public function toggle(User $user, EntityManagerInterface $em, Request $request): RedirectResponse {
+    public function toggle(User $user, EntityManagerInterface $em, Request $request, Security $security): RedirectResponse {
         $submittedToken = $request->request->get('_token');
 
         if (!$this->isCsrfTokenValid('toggle_user_' . $user->getId(), $submittedToken)) {
             $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin.utilisateurs');
+        }
+
+        /** @var User $currentUser */
+        $currentUser = $security->getUser();
+
+        // Empêche l'auto-désactivation
+        if ($user->getId() === $currentUser->getId()) {
+            $this->addFlash('error', 'Vous ne pouvez pas désactiver votre propre compte.');
             return $this->redirectToRoute('admin.utilisateurs');
         }
 
@@ -124,18 +133,6 @@ class AdminUtilisateursController extends AbstractController {
 
         $this->addFlash('success', 'État de l’utilisateur mis à jour.');
         return $this->redirectToRoute('admin.utilisateurs');
-    }
-
-    #[Route('/check-active', name: 'check_active')]
-    public function checkActive(): JsonResponse {
-        $user = $this->getUser();
-
-        if (!$user || !$user->isActive()) {
-            // Utilisateur désactivé
-            return $this->json(['active' => false]);
-        }
-
-        return $this->json(['active' => true]);
     }
 
     #[Route('/admin/utilisateurs/password', name: 'admin.utilisateurs.password', methods: ['POST'])]
