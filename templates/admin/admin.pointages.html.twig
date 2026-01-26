@@ -64,7 +64,7 @@
         .btn-logout {
             position: absolute;
             top: 15px;
-            right: 20px; 
+            right: 20px;
             font-size: 14px;
             color: #888;
             text-decoration: underline;
@@ -142,7 +142,7 @@
                                 {{ dateStartInput|date('d/m/Y') }} → {{ dateEndInput|date('d/m/Y') }}
                                 <br><small class="text-muted">
                                     <a href="#" onclick="clearDateFilter();
-                                return false;" class="link-underline link-underline-opacity-0-hover">Effacer</a>
+                                            return false;" class="link-underline link-underline-opacity-0-hover">Effacer</a>
                                 </small>
                             </div>
                         {% else %}
@@ -170,14 +170,14 @@
                     {% endif %}
 
                     <div class="ms-auto gap-2 d-flex">
-                        <a href="{{ path('admin.pointage.export.pdf', app.request.query.all|merge({'page': null})) }}" class="btn btn-sm btn-add px-3">Exporter</a>
+                        <a href="{{ path('admin.pointage.export.pdf', app.request.query.all) }}" class="btn btn-sm btn-add px-3">Exporter</a>
                     </div>
                 </div>
             </div>
 
 
-            {# PAGINATION  #}
-            {% if dateStart and dateEnd and period != 'custom' and period != 'global' %}
+            {# PAGINATION #}
+            {% if (dateStartInput and dateEndInput) == false and period != 'global' %}
                 <div class="d-flex justify-content-center align-items-center mb-3 gap-2">
                     <div class="btn-group btn-group-sm">
                         <a class="btn btn-outline-secondary {% if page == 1 %}disabled{% endif %}" href="{{ basePath ~ '&page=1' }}">«</a>
@@ -194,6 +194,7 @@
                     </small>
                 </div>
             {% endif %}
+
 
             {# Tableau #}
             <table class="table table-bordered table-hover align-middle">
