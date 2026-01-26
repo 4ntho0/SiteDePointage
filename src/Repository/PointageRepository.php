@@ -71,16 +71,40 @@ class PointageRepository extends ServiceEntityRepository {
         $this->getEntityManager()->flush();
     }
 
-    public function findAllOrderByFieldWithLimit(string $champ, string $ordre, ?string $username = null, ?int $limit = null, ?int $offset = null): array {
-        $qb = $this->createQueryBuilder('p')
-                ->join('p.utilisateur', 'u');
 
-        if ($username) {
-            $qb->where('u.username = :username')
-                    ->setParameter('username', $username);
+    /**
+     * Récupère tous les pointages triés par champ avec filtres utilisateur et dates
+     * @param string $champ
+     * @param string $ordre
+     * @param string|null $userFilter
+     * @param \DateTimeInterface|null $dateStart
+     * @param \DateTimeInterface|null $dateEnd
+     * @return Pointage[]
+     */
+    public function findAllOrderByFieldWithLimit(
+            string $champ, string $ordre,
+            ?string $userFilter = null,
+            ?\DateTimeInterface $dateStart = null,
+            ?\DateTimeInterface $dateEnd = null
+    ): array {
+        $qb = $this->createQueryBuilder('p')->join('p.utilisateur', 'u');
+
+        if ($userFilter) {
+            $users = explode(',', $userFilter);
+            $qb->andWhere('u.username IN (:users)')
+                    ->setParameter('users', $users);
         }
 
-        // Tri
+        if ($dateStart) {
+            $qb->andWhere('p.datePointage >= :dateStart')
+                    ->setParameter('dateStart', $dateStart->format('Y-m-d'));
+        }
+
+        if ($dateEnd) {
+            $qb->andWhere('p.datePointage <= :dateEnd')
+                    ->setParameter('dateEnd', $dateEnd->format('Y-m-d'));
+        }
+
         if ($champ === 'datePointage') {
             $qb->orderBy('p.datePointage', $ordre)
                     ->addOrderBy('p.heureEntree', $ordre);
@@ -90,14 +114,43 @@ class PointageRepository extends ServiceEntityRepository {
                     ->addOrderBy('p.heureEntree', 'DESC');
         }
 
-        if ($limit !== null) {
-            $qb->setMaxResults($limit);
-        }
-
-        if ($offset !== null) {
-            $qb->setFirstResult($offset);
-        }
-
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * renvoie le nombre total de pointages correspondant à des filtres
+     * sur l’utilisateur
+     * @param string|null $userFilter
+     * @param \DateTimeInterface|null $dateStart
+     * @param \DateTimeInterface|null $dateEnd
+     * @return int
+     */
+    public function countFiltered(
+            ?string $userFilter = null,
+            ?\DateTimeInterface $dateStart = null,
+            ?\DateTimeInterface $dateEnd = null
+    ): int {
+        $qb = $this->createQueryBuilder('p')
+                ->select('COUNT(p.id)');
+
+
+        if ($userFilter) {
+            $qb->join('p.utilisateur', 'u');
+            $users = explode(',', $userFilter);
+            $qb->andWhere('u.username IN (:users)')
+                    ->setParameter('users', $users);
+        }
+
+        if ($dateStart) {
+            $qb->andWhere('p.datePointage >= :dateStart')
+                    ->setParameter('dateStart', $dateStart->format('Y-m-d'));
+        }
+
+        if ($dateEnd) {
+            $qb->andWhere('p.datePointage <= :dateEnd')
+                    ->setParameter('dateEnd', $dateEnd->format('Y-m-d'));
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 }

@@ -8,6 +8,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class AdminPointageController extends AbstractController {
 
@@ -17,25 +19,72 @@ class AdminPointageController extends AbstractController {
         $this->repository = $repository;
     }
 
-    #[Route('/admin/pointages', name: 'admin.pointage')]
+    #[Route('/admin/pointages', name: 'admin.pointage', methods: ['GET'])]
     public function index(Request $request): Response {
         $sortField = $request->query->get('sort', 'datePointage');
         $sortOrder = $request->query->get('order', 'DESC');
         $userFilter = $request->query->get('user');
-        $limit = (int) $request->query->get('limit', 25);
-        $page = max(1, (int) $request->query->get('page', 1)); // page >= 1
-        // Nombre total de pointages filtrés
-        $totalPointages = count($this->repository->findAllOrderByField($sortField, $sortOrder, $userFilter));
+        $userFilters = $userFilter ? explode(',', $userFilter) : [];
+        $page = max(1, (int) $request->query->get('page', 1));
+        $period = $request->query->get('period', 'week');
 
-        // Calcul offset
-        $offset = ($page - 1) * $limit;
+        // Dates personnalisées (priorité)
+        $dateStartInput = $request->query->get('date_start');
+        $dateEndInput = $request->query->get('date_end');
 
-        // Récupérer uniquement les pointages pour cette page
-        $pointages = $this->repository->findAllOrderByFieldWithLimit($sortField, $sortOrder, $userFilter, $limit, $offset);
+        $dateStart = null;
+        $dateEnd = null;
+        $today = new \DateTimeImmutable('today');
 
+        if ($dateStartInput && $dateEndInput) {
+            // Dates personnalisées
+            $dateStart = new \DateTimeImmutable($dateStartInput);
+            $dateEnd = new \DateTimeImmutable($dateEndInput);
+            $period = 'custom';
+        } else {
+            // Logique par période
+            switch ($period) {
+                case 'day':
+                    $date = $today->modify('-' . ($page - 1) . ' days');
+                    $dateStart = $date;
+                    $dateEnd = $date;
+                    break;
+
+                case 'week':
+                    $currentWeekStart = $today->modify('monday this week');
+                    $currentWeekStart = $currentWeekStart->modify('-' . ($page - 1) . ' weeks');
+                    $dateStart = $currentWeekStart;
+                    $dateEnd = $currentWeekStart->modify('sunday this week');
+                    break;
+
+                case 'month':
+                    $currentMonth = $today->modify('first day of this month');
+                    $targetMonth = $currentMonth->modify('-' . ($page - 1) . ' months');
+                    $dateStart = $targetMonth;
+                    $dateEnd = $targetMonth->modify('last day of this month');
+                    break;
+
+                case 'year':
+                    $yearOffset = (int) $today->format('Y') - ($page - 1);
+                    $dateStart = new \DateTimeImmutable($yearOffset . '-01-01');
+                    $dateEnd = new \DateTimeImmutable($yearOffset . '-12-31');
+                    break;
+
+                case 'global':
+                default:
+                    break;
+            }
+        }
+        $pointages = $this->repository->findAllOrderByFieldWithLimit(
+                $sortField,
+                $sortOrder,
+                $userFilter,
+                $dateStart,
+                $dateEnd
+        );
+
+        $totalPointages = $this->repository->countFiltered($userFilter, $dateStart, $dateEnd);
         $users = $this->repository->getAllUsernames();
-
-        $totalPages = ceil($totalPointages / $limit);
 
         return $this->render('admin/admin.pointages.html.twig', [
                     'pointages' => $pointages,
@@ -43,20 +92,23 @@ class AdminPointageController extends AbstractController {
                     'sortField' => $sortField,
                     'sortOrder' => $sortOrder,
                     'userFilter' => $userFilter,
-                    'limit' => $limit,
+                    'userFilters' => $userFilters,
                     'page' => $page,
-                    'totalPages' => $totalPages,
+                    'totalPointages' => $totalPointages,
+                    'period' => $period,
+                    'dateStart' => $dateStart,
+                    'dateEnd' => $dateEnd,
+                    'dateStartInput' => $dateStartInput,
+                    'dateEndInput' => $dateEndInput,
         ]);
     }
 
-    #[Route('/admin/pointages/suppr/{id}', name: 'admin.pointage.suppr')]
-    public function suppr(int $id): Response {
-        $pointage = $this->repository->find($id);
-
+    #[Route('/admin/pointages/suppr/{id}', name: 'admin.pointage.suppr', methods: ['GET'])]
+    public function suppr(int $id, PointageRepository $repository): Response {
+        $pointage = $repository->find($id);
         if ($pointage) {
-            $this->repository->remove($pointage);
+            $repository->remove($pointage);
         }
-
         return $this->redirectToRoute('admin.pointage');
     }
 
@@ -80,6 +132,7 @@ class AdminPointageController extends AbstractController {
         $fin = $fin ? new \DateTime($fin) : null;
         $sortie = $sortie ? new \DateTime($sortie) : null;
 
+        // Validations (inchangées)
         if (($debut && !$fin) || (!$debut && $fin)) {
             return $this->redirectToRoute('admin.pointage');
         }
@@ -102,5 +155,54 @@ class AdminPointageController extends AbstractController {
         $em->flush();
 
         return $this->redirectToRoute('admin.pointage');
+    }
+
+    #[Route('/admin/pointages/export/pdf', name: 'admin.pointage.export.pdf')]
+    public function exportPdf(Request $request): Response {
+        $sortField = $request->query->get('sort', 'datePointage');
+        $sortOrder = $request->query->get('order', 'DESC');
+        $userFilter = $request->query->get('user');
+        $dateStartInput = $request->query->get('date_start');
+        $dateEndInput = $request->query->get('date_end');
+
+        $dateStart = null;
+        $dateEnd = null;
+
+        if ($dateStartInput && $dateEndInput) {
+            $dateStart = new \DateTimeImmutable($dateStartInput);
+            $dateEnd = new \DateTimeImmutable($dateEndInput);
+        }
+
+        $pointages = $this->repository->findAllOrderByFieldWithLimit(
+                $sortField,
+                $sortOrder,
+                $userFilter,
+                $dateStart,
+                $dateEnd
+        );
+
+        $html = $this->renderView('admin/_pointages_pdf.html.twig', [
+            'pointages' => $pointages,
+            'userFilter' => $userFilter,
+            'dateStart' => $dateStart,
+            'dateEnd' => $dateEnd
+        ]);
+
+        $options = new Options();
+        $options->set('defaultFont', 'Arial');
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return new Response(
+                $dompdf->output(),
+                200,
+                [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="pointages_' . date('Y-m-d') . '.pdf"'
+                ]
+        );
     }
 }

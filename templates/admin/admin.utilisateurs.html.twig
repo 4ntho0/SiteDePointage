@@ -25,6 +25,40 @@
             width: 100%;
             max-width: 900px;
         }
+        .btn-top-nav {
+            position: absolute;
+            top: 15px;
+            right: 140px;
+            font-size: 14px;
+            color: #7b9acc;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+
+        .btn-top-nav:hover {
+            color: #5a7db8;
+            background: rgba(123, 154, 204, 0.1);
+            text-decoration: none;
+        }
+
+        .btn-logout {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 14px;
+            color: #888;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .btn-logout:hover {
+            color: #000;
+        }
+
 
         h5 {
             font-weight: bold;
@@ -53,20 +87,6 @@
             color: #fff;
         }
 
-        .btn-logout {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 14px;
-            color: #888;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-        .btn-logout:hover {
-            color: #000;
-        }
-
         .actions {
             display: flex;
             gap: 5px;
@@ -80,6 +100,7 @@
 
     <div class="page-pointage">
         <div class="card-pointage" data-admin-id="{{ app.user.id }}">
+            <a href="{{ path('admin.pointage') }}" class="btn-top-nav">Gestion des Pointages</a>
             <a href="{{ path('app_logout') }}" class="btn-logout">Déconnexion</a>
             <h5>Gestion des utilisateurs</h5>
 
@@ -95,7 +116,6 @@
                 </div>
                 <div class="d-flex gap-2">
                     <a href="#" class="btn btn-add btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">Ajouter utilisateur</a>
-                    <a href="{{ path('admin.pointage') }}" class="btn btn-add btn-sm">Pointages</a>
                 </div>
             </div>
             <table class="table table-bordered align-middle">
@@ -121,7 +141,7 @@
                                       style="display:inline-block"
                                       onsubmit="
                                       {% if u.id == app.user.id %}
-                                              alert('⚠️ Vous ne pouvez pas désactiver votre propre compte.＼（〇_ｏ）／');
+                                              alert('⚠️ Vous ne pouvez pas désactiver votre propre compte＼（〇_ｏ）／');
                                               return false;
                                       {% else %}
                                               return confirm('{{ u.isActive ? 'Un utilisateur désactivé ne pourra plus se connecter mais vous aurez toujours accès à ses anciens pointages.' : 'Voulez-vous réactiver cet utilisateur ?' }}');
@@ -145,7 +165,7 @@
                                     data-username="{{ u.username }}">
                                     Changer mot de passe
                                 </button>
-                                <button class="btn btn-danger btn-sm"
+                                <button class="btn btn-outline-danger btn-sm"
                                         data-bs-toggle="modal"
                                         data-bs-target="#deleteUserModal"
                                         data-user-id="{{ u.id }}"
@@ -467,7 +487,7 @@
 
                     if (userId === adminId) {
                         event.preventDefault();
-                        alert("⚠️ Vous ne pouvez pas supprimer votre propre compte ! ＼（〇_ｏ）／");
+                        alert("⚠️ Vous ne pouvez pas supprimer votre propre compte  ＼（〇_ｏ）／");
                         return;
                     }
 
