@@ -33,6 +33,18 @@ class Pointage {
     #[ORM\JoinColumn(nullable: false)]
     private ?User $utilisateur = null;
 
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 8, nullable: true)]
+    private ?string $latitudeEntree = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 11, scale: 8, nullable: true)]
+    private ?string $longitudeEntree = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 8, nullable: true)]
+    private ?string $latitudeSortie = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 11, scale: 8, nullable: true)]
+    private ?string $longitudeSortie = null;
+
     public function getId(): ?int {
         return $this->id;
     }
@@ -97,6 +109,42 @@ class Pointage {
         return $this;
     }
 
+    public function getLatitudeEntree(): ?string {
+        return $this->latitudeEntree;
+    }
+
+    public function setLatitudeEntree(?string $latitudeEntree): static {
+        $this->latitudeEntree = $latitudeEntree;
+        return $this;
+    }
+
+    public function getLongitudeEntree(): ?string {
+        return $this->longitudeEntree;
+    }
+
+    public function setLongitudeEntree(?string $longitudeEntree): static {
+        $this->longitudeEntree = $longitudeEntree;
+        return $this;
+    }
+
+    public function getLatitudeSortie(): ?string {
+        return $this->latitudeSortie;
+    }
+
+    public function setLatitudeSortie(?string $latitudeSortie): static {
+        $this->latitudeSortie = $latitudeSortie;
+        return $this;
+    }
+
+    public function getLongitudeSortie(): ?string {
+        return $this->longitudeSortie;
+    }
+
+    public function setLongitudeSortie(?string $longitudeSortie): static {
+        $this->longitudeSortie = $longitudeSortie;
+        return $this;
+    }
+
     public function getTotalTravailSeconds(): ?int {
         if (!$this->heureEntree || !$this->heureSortie) {
             return null;
@@ -116,7 +164,6 @@ class Pointage {
 
         return max(0, $total);
     }
-
 
     public function getTotalTravailFormatted(): ?string {
         $seconds = $this->getTotalTravailSeconds();
