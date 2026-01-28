@@ -71,7 +71,6 @@ class PointageRepository extends ServiceEntityRepository {
         $this->getEntityManager()->flush();
     }
 
-
     /**
      * Récupère tous les pointages triés par champ avec filtres utilisateur et dates
      * @param string $champ
@@ -133,7 +132,6 @@ class PointageRepository extends ServiceEntityRepository {
         $qb = $this->createQueryBuilder('p')
                 ->select('COUNT(p.id)');
 
-
         if ($userFilter) {
             $qb->join('p.utilisateur', 'u');
             $users = explode(',', $userFilter);
@@ -152,5 +150,66 @@ class PointageRepository extends ServiceEntityRepository {
         }
 
         return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    public function getRecapParUtilisateur(?\DateTimeInterface $dateStart, ?\DateTimeInterface $dateEnd, ?string $userFilter = null): array {
+        $qb = $this->createQueryBuilder('p')
+                ->join('p.utilisateur', 'u')
+                ->addSelect('u')
+                ->orderBy('u.username', 'ASC');
+
+        // Filtre date seulement si dates définies (pas en mode global)
+        if ($dateStart && $dateEnd) {
+            $qb->where('p.datePointage BETWEEN :start AND :end')
+                    ->setParameter('start', $dateStart->format('Y-m-d'))
+                    ->setParameter('end', $dateEnd->format('Y-m-d'));
+        }
+
+        // Filtre utilisateur
+        if ($userFilter && $userFilter !== 'all') {
+            $userFilters = explode(',', $userFilter);
+            $qb->andWhere('u.username IN (:users)')
+                    ->setParameter('users', $userFilters);
+        }
+
+        $pointages = $qb->getQuery()->getResult();
+
+        // Agrégation des totaux par utilisateur
+        $result = [];
+        foreach ($pointages as $pointage) {
+            /** @var \App\Entity\Pointage $pointage */
+            $user = $pointage->getUtilisateur();
+            if (!$user) {
+                continue;
+            }
+
+            $userId = $user->getId();
+            if (!isset($result[$userId])) {
+                $result[$userId] = [
+                    'user' => $user,
+                    'totalSeconds' => 0,
+                ];
+            }
+
+            $seconds = $pointage->getTotalTravailSeconds();
+            if ($seconds !== null) {
+                $result[$userId]['totalSeconds'] += $seconds;
+            }
+        }
+
+        foreach ($result as &$row) {
+            $seconds = $row['totalSeconds'];
+            $hours = floor($seconds / 3600);
+            $minutes = floor(($seconds % 3600) / 60);
+            $secs = $seconds % 60;
+
+            $row['totalFormatted'] = sprintf(
+                    '%02d:%02d:%02d',
+                    $hours,
+                    $minutes,
+                    $secs
+            );
+        }
+        return array_values($result);
     }
 }

@@ -11,18 +11,16 @@ use Doctrine\ORM\EntityManagerInterface;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
-class AdminPointageController extends AbstractController
-{
+class AdminPointageController extends AbstractController {
+
     private PointageRepository $repository;
 
-    public function __construct(PointageRepository $repository)
-    {
+    public function __construct(PointageRepository $repository) {
         $this->repository = $repository;
     }
 
     #[Route('/admin/pointages', name: 'admin.pointage', methods: ['GET'])]
-    public function index(Request $request): Response
-    {
+    public function index(Request $request): Response {
         $sortField = $request->query->get('sort', 'datePointage');
         $sortOrder = $request->query->get('order', 'DESC');
         $userFilter = $request->query->get('user');
@@ -32,36 +30,42 @@ class AdminPointageController extends AbstractController
         [$dateStart, $dateEnd, $period] = $this->getDateRangeFromRequest($request);
 
         $pointages = $this->repository->findAllOrderByFieldWithLimit(
-            $sortField,
-            $sortOrder,
-            $userFilter,
-            $dateStart,
-            $dateEnd
+                $sortField,
+                $sortOrder,
+                $userFilter,
+                $dateStart,
+                $dateEnd
+        );
+
+        $recapParUtilisateur = $this->repository->getRecapParUtilisateur(
+                $dateStart,
+                $dateEnd,
+                $userFilter
         );
 
         $totalPointages = $this->repository->countFiltered($userFilter, $dateStart, $dateEnd);
         $users = $this->repository->getAllUsernames();
 
         return $this->render('admin/admin.pointages.html.twig', [
-            'pointages' => $pointages,
-            'users' => $users,
-            'sortField' => $sortField,
-            'sortOrder' => $sortOrder,
-            'userFilter' => $userFilter,
-            'userFilters' => $userFilters,
-            'page' => $page,
-            'totalPointages' => $totalPointages,
-            'period' => $period,
-            'dateStart' => $dateStart,
-            'dateEnd' => $dateEnd,
-            'dateStartInput' => $request->query->get('date_start'),
-            'dateEndInput' => $request->query->get('date_end'),
+                    'pointages' => $pointages,
+                    'users' => $users,
+                    'sortField' => $sortField,
+                    'sortOrder' => $sortOrder,
+                    'userFilter' => $userFilter,
+                    'userFilters' => $userFilters,
+                    'page' => $page,
+                    'totalPointages' => $totalPointages,
+                    'period' => $period,
+                    'dateStart' => $dateStart,
+                    'dateEnd' => $dateEnd,
+                    'dateStartInput' => $request->query->get('date_start'),
+                    'dateEndInput' => $request->query->get('date_end'),
+                    'recapParUtilisateur' => $recapParUtilisateur,
         ]);
     }
 
     #[Route('/admin/pointages/suppr/{id}', name: 'admin.pointage.suppr', methods: ['GET'])]
-    public function suppr(int $id, PointageRepository $repository): Response
-    {
+    public function suppr(int $id, PointageRepository $repository): Response {
         $pointage = $repository->find($id);
         if ($pointage) {
             $repository->remove($pointage);
@@ -70,8 +74,7 @@ class AdminPointageController extends AbstractController
     }
 
     #[Route('/admin/pointages/edit', name: 'admin.pointage.edit', methods: ['POST'])]
-    public function edit(Request $request, EntityManagerInterface $em): Response
-    {
+    public function edit(Request $request, EntityManagerInterface $em): Response {
         $id = $request->request->get('id');
         $pointage = $this->repository->find($id);
 
@@ -95,10 +98,10 @@ class AdminPointageController extends AbstractController
         }
 
         if (
-            ($entree && $debut && $entree > $debut) ||
-            ($debut && $fin && $debut > $fin) ||
-            ($fin && $sortie && $fin > $sortie) ||
-            ($entree && $sortie && $entree > $sortie)
+                ($entree && $debut && $entree > $debut) ||
+                ($debut && $fin && $debut > $fin) ||
+                ($fin && $sortie && $fin > $sortie) ||
+                ($entree && $sortie && $entree > $sortie)
         ) {
             return $this->redirectToRoute('admin.pointage');
         }
@@ -115,8 +118,7 @@ class AdminPointageController extends AbstractController
     }
 
     #[Route('/admin/pointages/export/pdf', name: 'admin.pointage.export.pdf')]
-    public function exportPdf(Request $request): Response
-    {
+    public function exportPdf(Request $request): Response {
         $sortField = $request->query->get('sort', 'datePointage');
         $sortOrder = $request->query->get('order', 'DESC');
         $userFilter = $request->query->get('user');
@@ -124,18 +126,26 @@ class AdminPointageController extends AbstractController
         [$dateStart, $dateEnd, $period] = $this->getDateRangeFromRequest($request);
 
         $pointages = $this->repository->findAllOrderByFieldWithLimit(
-            $sortField,
-            $sortOrder,
-            $userFilter,
-            $dateStart,
-            $dateEnd
+                $sortField,
+                $sortOrder,
+                $userFilter,
+                $dateStart,
+                $dateEnd
+        );
+
+        $recapParUtilisateur = $this->repository->getRecapParUtilisateur(
+                $dateStart,
+                $dateEnd,
+                $userFilter
         );
 
         $html = $this->renderView('admin/_pointages_pdf.html.twig', [
             'pointages' => $pointages,
+            'recapParUtilisateur' => $recapParUtilisateur,
             'userFilter' => $userFilter,
             'dateStart' => $dateStart,
-            'dateEnd' => $dateEnd
+            'dateEnd' => $dateEnd,
+            'period' => $period
         ]);
 
         $options = new Options();
@@ -147,17 +157,16 @@ class AdminPointageController extends AbstractController
         $dompdf->render();
 
         return new Response(
-            $dompdf->output(),
-            200,
-            [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="pointages_' . date('Y-m-d') . '.pdf"'
-            ]
+                $dompdf->output(),
+                200,
+                [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="pointages_' . date('Y-m-d') . '.pdf"'
+                ]
         );
     }
 
-    private function getDateRangeFromRequest(Request $request): array
-    {
+    private function getDateRangeFromRequest(Request $request): array {
         $period = $request->query->get('period', 'week');
         $page = max(1, (int) $request->query->get('page', 1));
 
@@ -170,7 +179,6 @@ class AdminPointageController extends AbstractController
         $today = new \DateTimeImmutable('today');
 
         if ($dateStartInput && $dateEndInput) {
-            // Dates personnalisées
             $dateStart = new \DateTimeImmutable($dateStartInput);
             $dateEnd = new \DateTimeImmutable($dateEndInput);
         } else {

@@ -196,7 +196,7 @@
             {% endif %}
 
 
-            {# Tableau #}
+            {# Tableau des pointages#}
             <table class="table table-bordered table-hover align-middle">
                 <thead class="table-light">
                     <tr>
@@ -243,6 +243,44 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <h5>Récapitulatif par utilisateur</h5>
+                {# Tableau récapitulatif #}
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center">Utilisateur</th>
+                            <th class="text-center">Période</th>
+                            <th class="text-center">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recapParUtilisateur|length > 0 %}
+                            {% for row in recapParUtilisateur %}
+                                <tr>
+                                    <td class="text-center">{{ row.user.username }}</td>
+                                    <td class="text-center">
+                                        {% if period == 'global' %}
+                                            Toute la période
+                                        {% elseif period == 'day' %}
+                                            {{ dateStart|date('d/m/Y') }}
+                                        {% else %}
+                                            du {{ dateStart|date('d/m/Y') }} au {{ dateEnd|date('d/m/Y') }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center font-weight-bold">{{ row.totalFormatted }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">
+                                    Aucun pointage sur la période sélectionnée
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+
+
         </div>
     </div>
     <!-- Modal Éditer Pointage -->
@@ -447,6 +485,14 @@
             params.delete('date_start');
             params.delete('date_end');
             params.delete('user');
+            params.set('page', '1');
+
+            window.location.search = params.toString();
+        }
+        function clearDateFilter() {
+            const params = new URLSearchParams();
+            params.set('sort', new URLSearchParams(window.location.search).get('sort') || 'datePointage');
+            params.set('order', new URLSearchParams(window.location.search).get('order') || 'DESC');
             params.set('page', '1');
 
             window.location.search = params.toString();

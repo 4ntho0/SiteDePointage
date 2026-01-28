@@ -17,19 +17,20 @@ class AccueilController extends AbstractController
         $tz = new \DateTimeZone('Europe/Paris');
         $now = new \DateTime('now', $tz);
 
-        // COORDONNÉES
-        $LAT_REF = 46.8001257;
-        $LNG_REF = 1.6885293;
+        // Coordonnées de référence
+        $LAT_REF = 46.8025344;
+        $LNG_REF = 1.6744448;
         $RAYON_AUTORISE_METRES = 100;
 
-        // Récupération géolocalisation POST
+        // Récupération géolocalisation
         $latitude = $request->request->get('latitude');
         $longitude = $request->request->get('longitude');
 
-        // Pointage en cours (journée courante)
+        // Période du jour
         $start = new \DateTimeImmutable('today', $tz);
         $end = $start->modify('+1 day');
 
+        // Pointage du jour sans sortie
         $entreeEnCours = $em->getRepository(Pointage::class)
             ->createQueryBuilder('p')
             ->where('p.datePointage >= :start')
@@ -45,29 +46,26 @@ class AccueilController extends AbstractController
 
         $hasEntree = $entreeEnCours !== null;
 
-        // TRAITEMENT POST avec géolocalisation
         if ($request->isMethod('POST')) {
             $type = $request->request->get('type');
 
-            // Vérif géolocalisation obligatoire
+            // Géolocalisation requise
             if (!$latitude || !$longitude) {
-                $this->addFlash('error', 'Géolocalisation requise pour pointer.');
                 return $this->redirectToRoute('accueil');
             }
 
-            // Vérif distance
+            // Vérification distance
             $distanceMetres = $this->calculerDistance(
-                (float)$latitude, (float)$longitude, $LAT_REF, $LNG_REF
+                (float) $latitude,
+                (float) $longitude,
+                $LAT_REF,
+                $LNG_REF
             );
 
             if ($distanceMetres > $RAYON_AUTORISE_METRES) {
-                $this->addFlash('error',
-                    sprintf('❌ Trop loin ! %.0fm (max: %dm)', $distanceMetres, $RAYON_AUTORISE_METRES)
-                );
                 return $this->redirectToRoute('accueil');
             }
 
-            // Actions selon type
             switch ($type) {
                 case 'entrée':
                     if (!$hasEntree) {
@@ -77,68 +75,82 @@ class AccueilController extends AbstractController
                             ->setHeureEntree($now)
                             ->setLatitudeEntree($latitude)
                             ->setLongitudeEntree($longitude)
-                            ->setHeureSortie(null)
                             ->setUtilisateur($this->getUser());
+
                         $em->persist($pointage);
-                        $this->addFlash('success', '✅ Entrée enregistrée');
                     }
                     break;
 
                 case 'pause':
                     if ($hasEntree && $entreeEnCours->getHeureDebutPause() === null) {
                         $entreeEnCours->setHeureDebutPause($now);
-                        $this->addFlash('success', '⏸️ Pause débutée');
                     }
                     break;
 
                 case 'reprise':
-                    if ($hasEntree && $entreeEnCours->getHeureDebutPause() !== null
-                        && $entreeEnCours->getHeureFinPause() === null) {
+                    if (
+                        $hasEntree &&
+                        $entreeEnCours->getHeureDebutPause() !== null &&
+                        $entreeEnCours->getHeureFinPause() === null
+                    ) {
                         $entreeEnCours->setHeureFinPause($now);
-                        $this->addFlash('success', '▶️ Pause terminée');
                     }
                     break;
 
                 case 'sortie':
                     if ($hasEntree) {
-                        $entreeEnCours->setHeureSortie($now);
-                        $entreeEnCours->setLatitudeSortie($latitude);
-                        $entreeEnCours->setLongitudeSortie($longitude);
-                        $this->addFlash('success', '✅ Sortie enregistrée');
+                        $entreeEnCours
+                            ->setHeureSortie($now)
+                            ->setLatitudeSortie($latitude)
+                            ->setLongitudeSortie($longitude);
                     }
                     break;
             }
 
             $em->flush();
+
             return $this->redirectToRoute('accueil');
         }
 
-        // Variables template
-        $heureEntree = $hasEntree ? $entreeEnCours->getHeureEntree()?->format('H:i:s') : null;
+        $heureEntree = $hasEntree
+            ? $entreeEnCours->getHeureEntree()?->format('H:i:s')
+            : null;
+
         $heureDebutPause = $entreeEnCours?->getHeureDebutPause();
         $heureFinPause = $entreeEnCours?->getHeureFinPause();
+
         $enPause = $heureDebutPause !== null && $heureFinPause === null;
         $pauseTerminee = $heureDebutPause !== null && $heureFinPause !== null;
 
         return $this->render('pages/accueil.html.twig', [
-            'hasEntree' => $hasEntree,
-            'heureEntree' => $heureEntree,
-            'enPause' => $enPause,
-            'pauseTerminee' => $pauseTerminee,
+            'hasEntree'       => $hasEntree,
+            'heureEntree'     => $heureEntree,
+            'enPause'         => $enPause,
+            'pauseTerminee'   => $pauseTerminee,
             'heureDebutPause' => $heureDebutPause?->format('H:i:s'),
-            'heureFinPause' => $heureFinPause?->format('H:i:s'),
+            'heureFinPause'   => $heureFinPause?->format('H:i:s'),
         ]);
     }
 
-    private function calculerDistance(float $lat1, float $lng1, float $lat2, float $lng2): float
-    {
-        $earthRadius = 6371000;
+    private function calculerDistance(
+        float $lat1,
+        float $lng1,
+        float $lat2,
+        float $lng2
+    ): float {
+        $earthRadius = 6371000; // m
+
         $dLat = deg2rad($lat2 - $lat1);
         $dLng = deg2rad($lng2 - $lng1);
-        $a = sin($dLat/2) * sin($dLat/2) +
-             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-             sin($dLng/2) * sin($dLng/2);
-        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+
+        $a =
+            sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) *
+            cos(deg2rad($lat2)) *
+            sin($dLng / 2) * sin($dLng / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
         return $earthRadius * $c;
     }
 }
