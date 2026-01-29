@@ -1,182 +1,73 @@
-{# templates/pages/accueil.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Pointage{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/pointage.css') }}">
+{% endblock %}
+
 {% block body %}
+<div class="page-pointage">
+    <div class="card-pointage">
+        <p class="user">Bonjour {{ app.user.username }},</p>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #0d001c, #1e1e1e);
-        }
+        <p class="date" id="date"></p>
+        <div class="heure" id="heure"></div>
 
-        .page-pointage {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+        {% if hasEntree %}
+            <p class="info-embauche">
+                Heure d'embauche : {{ heureEntree }}
+            </p>
+            <p class="info-duree" id="duree">Durée : 00:00:00</p>
+        {% endif %}
 
-        .card-pointage {
-            background: #ffffff;
-            padding: 40px;
-            width: 380px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .card-pointage h2 {
-            margin-bottom: 15px;
-        }
-
-        .user {
-            font-weight: bold;
-            font-size: 28px;
-        }
-
-        .date {
-            color: #777;
-            margin-bottom: 20px;
-        }
-
-        .heure {
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 25px;
-        }
-
-        .info-embauche {
-            font-size: 16px;
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .info-duree {
-            font-size: 16px;
-            color: #333;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-
-        .actions {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 15px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: not-allowed;
-            color: white;
-        }
-
-        .btn-entree {
-            background-color: #28a745;
-        }
-
-        .btn-sortie {
-            background-color: #dc3545;
-        }
-
-        .btn-pause {
-            background-color: #f0ad4e;
-            cursor: pointer;
-        }
-
-        .info {
-            font-size: 13px;
-            color: #555;
-        }
-
-        .logout-link {
-            display: block;
-            margin-top: 10px;
-            font-size: 14px;
-            color: #888;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-        .logout-link:hover {
-            color: #000;
-        }
-
-    </style>
-
-    <div class="page-pointage">
-        <div class="card-pointage">
-            <p class="user">Bonjour {{ app.user.username }},</p>
-
-            <p class="date" id="date">00/00/0000</p>
-            <div class="heure" id="heure">00:00:00</div>
-
-            {% if hasEntree %}
-                <p class="info-embauche">
-                    Heure d'embauche : {{ heureEntree }}
-                </p>
-                <p class="info-duree" id="duree">
-                    Durée : 00:00:00
-                </p>
+        <div class="actions">
+            {% if not hasEntree %}
+                <form method="post">
+                    <input type="hidden" name="type" value="entrée">
+                    <button class="btn btn-entree">Entrée</button>
+                </form>
             {% endif %}
 
-            <div class="actions">
-
-                {# Entrée #}
-                {% if not hasEntree %}
-                    <form method="post" style="flex: 1;">
-                        <input type="hidden" name="type" value="entrée">
-                        <button class="btn btn-entree">Entrée</button>
+            {% if hasEntree and not pauseTerminee %}
+                {% if not enPause %}
+                    <form method="post">
+                        <input type="hidden" name="type" value="pause">
+                        <button class="btn btn-pause">Pause</button>
+                    </form>
+                {% else %}
+                    <form method="post">
+                        <input type="hidden" name="type" value="reprise">
+                        <button class="btn btn-pause">Reprendre</button>
                     </form>
                 {% endif %}
+            {% endif %}
 
-                {# Pause / Reprise #}
-                {% if hasEntree and not pauseTerminee %}
-                    {% if not enPause %}
-                        <form method="post" style="flex: 1;">
-                            <input type="hidden" name="type" value="pause">
-                            <button class="btn btn-pause">Pause</button>
-                        </form>
-                    {% else %}
-                        <form method="post" style="flex: 1;">
-                            <input type="hidden" name="type" value="reprise">
-                            <button class="btn btn-pause">Reprendre</button>
-                        </form>
-                    {% endif %}
-                {% endif %}
-
-                {# Sortie #}
-                {% if hasEntree and not enPause %}
-                    <form method="post" style="flex: 1;">
-                        <input type="hidden" name="type" value="sortie">
-                        <button class="btn btn-sortie">Sortie</button>
-                    </form>
-                {% endif %}
-
-            </div>
-
-            <p class="info">
-                Veuillez pointer à votre arrivée et à votre départ.
-            </p>
-
-            <hr>
-
-            <a href="{{ path('app_logout') }}" class="logout-link">
-                Déconnexion
-            </a>
+            {% if hasEntree and not enPause %}
+                <form method="post">
+                    <input type="hidden" name="type" value="sortie">
+                    <button class="btn btn-sortie">Sortie</button>
+                </form>
+            {% endif %}
         </div>
+
+        <p class="info">
+            Veuillez pointer à votre arrivée et à votre départ.
+        </p>
+
+        <hr>
+
+        <a href="{{ path('app_logout') }}" class="logout-link">
+            Déconnexion
+        </a>
     </div>
+</div>
+
 
     <script>
-        // ========================================
+        
         // HORLOGE & DATE
-        // ========================================
         function updateDate() {
             const now = new Date();
             const options = {
@@ -199,9 +90,7 @@
         updateTime();
         setInterval(updateTime, 1000);
 
-        // ========================================
         // CALCUL DURÉE TRAVAIL
-        // ========================================
         {% if hasEntree %}
             const heureEntree = "{{ heureEntree }}";
             const heureDebutPause = "{{ heureDebutPause ?? '' }}";
@@ -253,14 +142,12 @@
             updateDuree();
             setInterval(updateDuree, 1000);
         {% endif %}
-
-        // ========================================
+            
         // GÉOLOCALISATION
-        // ========================================
         let userLocation = null;
 
-        const BUREAU_LAT = 46.8025344;
-        const BUREAU_LNG = 1.6744448;
+        const BUREAU_LAT = 46.8062954;
+        const BUREAU_LNG = 1.6728192;
         const MAX_DISTANCE = 0.1; // 100 m en km
 
         function getDistance(lat1, lng1, lat2, lng2) {
@@ -318,9 +205,7 @@
             }
         }, 5000);
 
-        // ========================================
         // INTERCEPTION DES FORMULAIRES
-        // ========================================
         document.addEventListener('submit', function (e) {
             if (!e.target.matches('form[method="post"]')) {
                 return;

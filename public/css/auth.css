@@ -1,0 +1,120 @@
+/* Container de la page */
+.page-auth {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #0d001c, #1e1e1e);
+    padding: 20px;
+}
+
+/* Card principale */
+.card-auth {
+    background: #ffffff;
+    padding: 40px;
+    width: 380px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Titre */
+.card-auth h2 {
+    margin-bottom: 25px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Champs de formulaire communs */
+.form-input,
+.password-wrapper {
+    width: 100%;
+    height: 50px;               /* même hauteur pour login et wrapper */
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    background-color: #ececec;
+    transition: border 0.2s;
+    margin-bottom: 15px;        /* espace entre les champs */
+    display: flex;
+    align-items: center;
+    padding: 0 10px;            /* padding horizontal uniforme */
+}
+
+/* Champ login */
+.form-input {
+    outline: none;
+}
+
+/* Focus pour login et mot de passe */
+.form-input:focus,
+.password-wrapper:focus-within {
+    border-color: #7b9acc;
+}
+
+/* Champ mot de passe à l’intérieur du wrapper */
+.password-wrapper .password-field {
+    flex: 1;
+    border: none;
+    background: transparent;
+    height: 100%;             /* prend toute la hauteur du wrapper */
+    outline: none;
+    font-size: 16px;
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+
+/* Bouton toggle pour l’œil */
+.toggle-password {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px;
+    transition: color 0.2s;
+}
+
+.toggle-password i {
+    font-size: 18px;
+    color: #555;
+}
+
+.toggle-password:hover i {
+    color: #000;
+}
+
+/* Bouton submit */
+.form-submit {
+    width: 100%;
+    padding: 15px 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    background-color: #7b9acc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 10px;
+}
+
+.form-submit:hover {
+    background-color: #5a7db8;
+}
+
+/* Message d'erreur */
+.error {
+    background: #f8d7da;
+    color: #842029;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    text-align: left;
+}

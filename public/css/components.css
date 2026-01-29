@@ -1,0 +1,58 @@
+.btn {
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.btn-add {
+    background-color: #7b9acc;
+    color: #fff;
+}
+
+.btn-top-nav {
+    position: absolute;
+    top: 15px;
+    right: 140px;
+    font-size: 14px;
+    color: #7b9acc;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-top-nav:hover {
+    background: rgba(123, 154, 204, 0.1);
+    color: #5a7db8;
+}
+
+.btn-logout {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 14px;
+    color: #888;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.btn-logout:hover {
+    color: #000;
+}
+
+/* Tables */
+.table {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.table th,
+.table td {
+    vertical-align: middle !important;
+}
+
+/* Badges */
+.badge {
+    font-size: 0.8rem;
+}

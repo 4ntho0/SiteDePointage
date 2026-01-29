@@ -1,0 +1,87 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0d001c, #1e1e1e);
+}
+
+.page-pointage {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card-pointage {
+    background: #ffffff;
+    padding: 40px;
+    width: 380px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.user {
+    font-weight: bold;
+    font-size: 28px;
+}
+
+.date {
+    color: #777;
+    margin-bottom: 20px;
+}
+
+.heure {
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 25px;
+}
+
+.info-embauche,
+.info-duree {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.info-duree {
+    font-weight: bold;
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    flex: 0;
+    padding: 15px 25px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+}
+
+.btn-entree {
+    background-color: #28a745;
+}
+.btn-sortie {
+    background-color: #dc3545;
+}
+.btn-pause  {
+    background-color: #f0ad4e;
+}
+
+.info {
+    font-size: 13px;
+    color: #555;
+}
+
+.logout-link {
+    display: block;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #888;
+    text-decoration: underline;
+}
