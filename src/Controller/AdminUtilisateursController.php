@@ -40,7 +40,8 @@ class AdminUtilisateursController extends AbstractController {
             EntityManagerInterface $em,
             UserPasswordHasherInterface $passwordHasher
     ): RedirectResponse {
-        $username = $request->request->get('username');
+        $nom = trim($request->request->get('nom', ''));
+        $prenom = trim($request->request->get('prenom', ''));
         $plainPassword = $request->request->get('password');
         $passwordConfirm = $request->request->get('password_confirm');
         $role = $request->request->get('role', 'ROLE_USER');
@@ -51,9 +52,8 @@ class AdminUtilisateursController extends AbstractController {
             return $this->redirectToRoute('admin.utilisateurs');
         }
 
-
-        if (!$username || !$plainPassword) {
-            $this->addFlash('error', 'Nom d’utilisateur et mot de passe requis.');
+        if (!$nom || !$prenom || !$plainPassword) {
+            $this->addFlash('error', 'Nom, prénom et mot de passe sont requis.');
             return $this->redirectToRoute('admin.utilisateurs');
         }
 
@@ -62,15 +62,27 @@ class AdminUtilisateursController extends AbstractController {
             return $this->redirectToRoute('admin.utilisateurs');
         }
 
+        // Génération automatique de l'username
+        $username = trim("$nom $prenom");
+
+        // Vérifier si l'username existe déjà
+        $existingUser = $em->getRepository(User::class)->findOneBy(['username' => $username]);
+        if ($existingUser) {
+            $this->addFlash('error', "Un utilisateur avec le nom '$username' existe déjà.");
+            return $this->redirectToRoute('admin.utilisateurs');
+        }
+
         $user = new User();
         $user->setUsername($username);
+        $user->setNom($nom);
+        $user->setPrenom($prenom);
         $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
         $user->setRoles([$role]);
 
         $em->persist($user);
         $em->flush();
 
-        $this->addFlash('success', 'Utilisateur créé avec succès.');
+        $this->addFlash('success', "Utilisateur '$username' créé avec succès.");
         return $this->redirectToRoute('admin.utilisateurs');
     }
 

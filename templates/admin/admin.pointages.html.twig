@@ -143,13 +143,14 @@
                     {% endfor %}
                 </tbody>
             </table>
+                
             <h5>Récapitulatif par utilisateur</h5>
-                {# Tableau récapitulatif #}
                 <table class="table table-bordered table-hover align-middle">
                     <thead class="table-light">
                         <tr>
                             <th class="text-center">Utilisateur</th>
                             <th class="text-center">Période</th>
+                            <th class="text-center">Jours travaillés</th>
                             <th class="text-center">Total</th>
                         </tr>
                     </thead>
@@ -167,6 +168,7 @@
                                             du {{ dateStart|date('d/m/Y') }} au {{ dateEnd|date('d/m/Y') }}
                                         {% endif %}
                                     </td>
+                                     <td class="text-center">5</td>
                                     <td class="text-center font-weight-bold">{{ row.totalFormatted }}</td>
                                 </tr>
                             {% endfor %}

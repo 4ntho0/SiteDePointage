@@ -1,103 +1,5 @@
 {% extends "base.html.twig" %}
-
 {% block body %}
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #0d001c, #1e1e1e);
-        }
-
-        .page-pointage {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .card-pointage {
-            position: relative;
-            background: #ffffff;
-            padding: 30px 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            width: 100%;
-            max-width: 900px;
-        }
-        .btn-top-nav {
-            position: absolute;
-            top: 15px;
-            right: 140px;
-            font-size: 14px;
-            color: #7b9acc;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 4px 8px;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            z-index: 10;
-        }
-
-        .btn-top-nav:hover {
-            color: #5a7db8;
-            background: rgba(123, 154, 204, 0.1);
-            text-decoration: none;
-        }
-
-        .btn-logout {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 14px;
-            color: #888;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-        .btn-logout:hover {
-            color: #000;
-        }
-
-
-        h5 {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        .table {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .table th, .table td {
-            vertical-align: middle !important;
-        }
-
-        .btn {
-            border-radius: 8px;
-            font-weight: bold;
-        }
-
-        .btn-add {
-            background-color: #7b9acc;
-            color: #fff;
-        }
-
-        .actions {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            font-size: 0.8rem;
-        }
-    </style>
-
     <div class="page-pointage">
         <div class="card-pointage" data-admin-id="{{ app.user.id }}">
             <a href="{{ path('admin.pointage') }}" class="btn-top-nav">Gestion des Pointages</a>
@@ -194,15 +96,23 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <!-- Nom d'utilisateur -->
+                        <!-- Nom -->
                         <div class="mb-3">
-                            <label for="username" class="form-label">Nom d'utilisateur</label>
-                            <input type="text" id="username" name="username" class="form-control" required>
+                            <label for="nom" class="form-label">Nom <span class="text-danger">*</span></label>
+                            <input type="text" id="nom" name="nom" class="form-control" required>
                             <div class="invalid-feedback">Veuillez renseigner ce champ.</div>
                         </div>
+
+                        <!-- Prénom -->
+                        <div class="mb-3">
+                            <label for="prenom" class="form-label">Prénom <span class="text-danger">*</span></label>
+                            <input type="text" id="prenom" name="prenom" class="form-control" required>
+                            <div class="invalid-feedback">Veuillez renseigner ce champ.</div>
+                        </div>
+
                         <!-- Mot de passe -->
                         <div class="mb-3">
-                            <label class="form-label">Mot de passe</label>
+                            <label class="form-label">Mot de passe <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <input type="password" id="password" name="password" class="form-control password-field" required>
                                 <button class="btn btn-outline-secondary toggle-password" type="button">
@@ -214,7 +124,7 @@
 
                         <!-- Confirmation mot de passe -->
                         <div class="mb-3">
-                            <label class="form-label">Confirmer le mot de passe</label>
+                            <label class="form-label">Confirmer le mot de passe <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <input type="password" id="password_confirm" name="password_confirm" class="form-control password-field" required>
                                 <button class="btn btn-outline-secondary toggle-password" type="button">
@@ -223,17 +133,16 @@
                                 <div class="invalid-feedback" id="password-error">Les mots de passe ne correspondent pas.</div>
                             </div>
                         </div>
+
                         <!-- Rôle -->
                         <div class="mb-3">
-                            <label for="role" class="form-label">Rôle</label>
+                            <label for="role" class="form-label">Rôle <span class="text-danger">*</span></label>
                             <select id="role" name="role" class="form-select" required>
                                 <option value="">Sélectionnez un rôle</option>
                                 <option value="ROLE_USER" selected>Utilisateur</option>
                                 <option value="ROLE_ADMIN">Administrateur</option>
                             </select>
-                            <div class="invalid-feedback">
-                                Veuillez sélectionner un rôle.
-                            </div>
+                            <div class="invalid-feedback">Veuillez sélectionner un rôle.</div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -244,6 +153,7 @@
             </form>
         </div>
     </div>
+
 
     <!-- Modal changer mot de passe -->
     <div class="modal fade" id="changePasswordModal" tabindex="-1">
@@ -377,26 +287,58 @@
             });
 
             // ======================
-            // Validation création utilisateur
-            // ======================
+// Validation création utilisateur (username généré côté serveur)
+// ======================
             const addUserForm = document.getElementById('addUserForm');
             if (addUserForm) {
-                const username = document.getElementById('username');
+                const nom = document.getElementById('nom');
+                const prenom = document.getElementById('prenom');
                 const password = document.getElementById('password');
                 const passwordConfirm = document.getElementById('password_confirm');
                 const role = document.getElementById('role');
                 const passwordError = document.getElementById('password-error');
 
+                // Validation en temps réel nom/prénom
+                if (nom) {
+                    nom.addEventListener('blur', function () {
+                        if (!this.value.trim()) {
+                            this.classList.add('is-invalid');
+                        } else {
+                            this.classList.remove('is-invalid');
+                        }
+                    });
+                }
+
+                if (prenom) {
+                    prenom.addEventListener('blur', function () {
+                        if (!this.value.trim()) {
+                            this.classList.add('is-invalid');
+                        } else {
+                            this.classList.remove('is-invalid');
+                        }
+                    });
+                }
+
                 addUserForm.addEventListener('submit', function (e) {
                     let valid = true;
 
-                    if (!username.value.trim()) {
-                        username.classList.add('is-invalid');
+                    // Validation Nom
+                    if (!nom.value.trim()) {
+                        nom.classList.add('is-invalid');
                         valid = false;
                     } else {
-                        username.classList.remove('is-invalid');
+                        nom.classList.remove('is-invalid');
                     }
 
+                    // Validation Prénom
+                    if (!prenom.value.trim()) {
+                        prenom.classList.add('is-invalid');
+                        valid = false;
+                    } else {
+                        prenom.classList.remove('is-invalid');
+                    }
+
+                    // Validation Mot de passe
                     if (!password.value) {
                         password.classList.add('is-invalid');
                         valid = false;
@@ -404,6 +346,7 @@
                         password.classList.remove('is-invalid');
                     }
 
+                    // Validation Confirmation
                     if (!passwordConfirm.value) {
                         passwordConfirm.classList.add('is-invalid');
                         passwordError.style.display = 'none';
@@ -417,6 +360,7 @@
                         passwordError.style.display = 'none';
                     }
 
+                    // Validation Rôle
                     if (!role.value) {
                         role.classList.add('is-invalid');
                         valid = false;
@@ -424,10 +368,24 @@
                         role.classList.remove('is-invalid');
                     }
 
-                    if (!valid)
+                    if (!valid) {
                         e.preventDefault();
+                        // Focus sur le premier champ invalide
+                        if (!nom.value.trim())
+                            nom.focus();
+                        else if (!prenom.value.trim())
+                            prenom.focus();
+                        else if (!password.value)
+                            password.focus();
+                        else if (!passwordConfirm.value)
+                            passwordConfirm.focus();
+                        else if (!role.value)
+                            role.focus();
+                    }
                 });
             }
+
+
 
             // ======================
             // Validation changement mot de passe

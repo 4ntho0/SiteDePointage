@@ -18,9 +18,9 @@ class AccueilController extends AbstractController
         $now = new \DateTime('now', $tz);
 
         // Coordonnées de référence
-        $LAT_REF = 46.8062954;
-        $LNG_REF = 1.6728192;
-        $RAYON_AUTORISE_METRES = 100;
+        $LAT_REF = 46.8043279;
+        $LNG_REF = 1.6793064;
+        $RAYON_AUTORISE_METRES = 500;
 
         // Récupération géolocalisation
         $latitude = $request->request->get('latitude');

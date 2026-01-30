@@ -10,7 +10,7 @@
 {% block body %}
 <div class="page-pointage">
     <div class="card-pointage">
-        <p class="user">Bonjour {{ app.user.username }},</p>
+        <p class="user">Bonjour {{ app.user.prenom }},</p>
 
         <p class="date" id="date"></p>
         <div class="heure" id="heure"></div>
@@ -146,9 +146,9 @@
         // GÉOLOCALISATION
         let userLocation = null;
 
-        const BUREAU_LAT = 46.8062954;
-        const BUREAU_LNG = 1.6728192;
-        const MAX_DISTANCE = 0.1; // 100 m en km
+        const BUREAU_LAT = 46.8043279;
+        const BUREAU_LNG = 1.6793064;
+        const MAX_DISTANCE = 0.5; // 500 m en km
 
         function getDistance(lat1, lng1, lat2, lng2) {
             const R = 6371;
@@ -229,7 +229,7 @@
                 alert(
                     '🚫 Trop loin du bureau\n' +
                     Math.round(distance * 1000) +
-                    'm (max 100m)'
+                    'm (max 500m)'
                 );
                 return;
             }
