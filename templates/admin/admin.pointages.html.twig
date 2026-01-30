@@ -70,7 +70,9 @@
                     {% endif %}
 
                     <div class="ms-auto gap-2 d-flex">
-                        <a href="{{ path('admin.pointage.export.pdf', app.request.query.all) }}" class="btn btn-sm btn-add px-3">Exporter</a>
+                        <a href="{{ path('admin.pointage.export.pdf', app.request.query.all) }}" class="btn btn-sm btn-add px-3">Exporter PDF</a>
+                        <a href="{{ path('admin.pointage.export.excel', app.request.query.all) }}" class="btn btn-sm btn-add px-3">Exporter Excel</a>
+
                     </div>
                 </div>
             </div>
@@ -168,7 +170,7 @@
                                             du {{ dateStart|date('d/m/Y') }} au {{ dateEnd|date('d/m/Y') }}
                                         {% endif %}
                                     </td>
-                                     <td class="text-center">5</td>
+                                     <td class="text-center">{{ row.joursTravailles }}</td>
                                     <td class="text-center font-weight-bold">{{ row.totalFormatted }}</td>
                                 </tr>
                             {% endfor %}

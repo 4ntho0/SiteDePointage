@@ -188,6 +188,7 @@ class PointageRepository extends ServiceEntityRepository {
                 $result[$userId] = [
                     'user' => $user,
                     'totalSeconds' => 0,
+                    'joursTravailles' => [],
                 ];
             }
 
@@ -195,9 +196,18 @@ class PointageRepository extends ServiceEntityRepository {
             if ($seconds !== null) {
                 $result[$userId]['totalSeconds'] += $seconds;
             }
+
+            $datePointage = $pointage->getDatePointage();
+            if ($datePointage) {
+                $result[$userId]['joursTravailles'][] = $datePointage->format('Y-m-d');
+            }
         }
 
         foreach ($result as &$row) {
+            // Compter les jours distincts
+            $row['joursTravailles'] = count(array_unique($row['joursTravailles']));
+
+            // Formatage du total
             $seconds = $row['totalSeconds'];
             $hours = floor($seconds / 3600);
             $minutes = floor(($seconds % 3600) / 60);
@@ -210,6 +220,8 @@ class PointageRepository extends ServiceEntityRepository {
                     $secs
             );
         }
+        unset($row);
+
         return array_values($result);
     }
 }

@@ -219,4 +219,152 @@ class AdminPointageController extends AbstractController {
 
         return [$dateStart, $dateEnd, $period];
     }
+
+    #[Route('/admin/pointages/export/excel', name: 'admin.pointage.export.excel')]
+    public function exportExcel(Request $request): Response {
+        // Récupération des données
+        $sortField = $request->query->get('sort', 'datePointage');
+        $sortOrder = $request->query->get('order', 'DESC');
+        $userFilter = $request->query->get('user');
+        [$dateStart, $dateEnd, $period] = $this->getDateRangeFromRequest($request);
+
+        $pointages = $this->repository->findAllOrderByFieldWithLimit($sortField, $sortOrder, $userFilter, $dateStart, $dateEnd);
+        $recapParUtilisateur = $this->repository->getRecapParUtilisateur($dateStart, $dateEnd, $userFilter);
+
+        $tempFile = sys_get_temp_dir() . '/pointages_' . uniqid() . '.xlsx';
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Pointages');
+
+        //EN-TÊTE RAPPORT (lignes 1-2) - CENTRÉ
+        $dateGeneration = (new \DateTime())->format('d/m/Y \à H:i');
+        $periodeText = $period === 'global' ? 'Toute la période' :
+                ($period === 'day' && $dateStart ? $dateStart->format('d/m/Y') :
+                ($dateStart && $dateEnd ? $dateStart->format('d/m/Y') . ' → ' . $dateEnd->format('d/m/Y') : ''));
+
+        $utilisateursText = $userFilter ?
+                (strpos($userFilter, ',') !== false ?
+                'Utilisateur(s) : ' . str_replace(',', ', ', $userFilter) :
+                'Utilisateur : ' . $userFilter) : 'Tous les utilisateurs';
+
+        $sheet->setCellValue('B1', 'Rapport Pointages');
+        $sheet->mergeCells('B1:H1');
+        $sheet->getStyle('B1')->getFont()->setBold(true)->setSize(16);
+        $sheet->getStyle('B1')->getAlignment()->setHorizontal('center');
+
+        $sheet->setCellValue('B2', "Généré le {$dateGeneration} | Période : {$periodeText} | {$utilisateursText}");
+        $sheet->mergeCells('B2:H2');
+        $sheet->getStyle('B2')->getAlignment()->setHorizontal('center');
+
+        // ESPACE après en-tête
+        $row = 4;
+
+        //TABLEAU 1 : POINTAGES (B4-H)
+        $sheet->setCellValue("B{$row}", 'Tableau des pointages');
+        $sheet->mergeCells("B{$row}:H{$row}");
+        $sheet->getStyle("B{$row}")->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle("B{$row}")->getAlignment()->setHorizontal('center');
+
+        $headers1 = ['Utilisateur', 'Date', 'Entrée', 'Début pause', 'Fin pause', 'Sortie', 'Total'];
+        $sheet->fromArray($headers1, null, "B" . ($row + 1));
+
+        $row += 2;
+        foreach ($pointages as $pointage) {
+            $sheet->setCellValue("B{$row}", $pointage->getUtilisateur()?->getUsername() ?? 'Inconnu');
+            $sheet->setCellValue("C{$row}", $pointage->getDatePointage()?->format('d/m/Y') ?? '');
+            $sheet->setCellValue("D{$row}", $pointage->getHeureEntree()?->format('H:i') ?? '');
+            $sheet->setCellValue("E{$row}", $pointage->getHeureDebutPause()?->format('H:i') ?? '');
+            $sheet->setCellValue("F{$row}", $pointage->getHeureFinPause()?->format('H:i') ?? '');
+            $sheet->setCellValue("G{$row}", $pointage->getHeureSortie()?->format('H:i') ?? '');
+            $sheet->setCellValue("H{$row}", $pointage->getTotalTravailFormatted() ?? '');
+            $row++;
+        }
+
+        $finPointages = $row - 1;
+
+        // ESPACE 3 lignes
+        $row += 3;
+        $recapTitre = $row;
+        $recapHeader = $row + 1;
+
+        //TABLEAU 2 : RÉCAPITULATIF (B-G)
+        $sheet->setCellValue("B{$recapTitre}", 'Tableau récapitulatif');
+        $sheet->mergeCells("B{$recapTitre}:E{$recapTitre}");
+        $sheet->getStyle("B{$recapTitre}")->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle("B{$recapTitre}")->getAlignment()->setHorizontal('center');
+
+        $headers2 = ['Utilisateur', 'Période', 'Jours travaillés', 'Total'];
+        $sheet->fromArray($headers2, null, "B{$recapHeader}");
+
+        $row = $recapHeader + 1;
+        $finRecap = $row;
+        foreach ($recapParUtilisateur as $rowData) {
+            $username = $rowData['user']?->getUsername() ?? $rowData['username'] ?? 'Inconnu';
+            $periodeText = $period === 'global' ? 'Toute la période' :
+                    ($period === 'day' && $dateStart ? $dateStart->format('d/m/Y') :
+                    ($dateStart && $dateEnd ? 'du ' . $dateStart->format('d/m/Y') . ' au ' . $dateEnd->format('d/m/Y') : ''));
+
+            $sheet->setCellValue("B{$row}", $username);
+            $sheet->setCellValue("C{$row}", $periodeText);
+            $sheet->setCellValue("D{$row}", $rowData['joursTravailles'] ?? 0);
+            $sheet->setCellValue("E{$row}", $rowData['totalFormatted'] ?? '');
+            $row++;
+            $finRecap = $row - 1;
+        }
+
+        // MISE EN FORME
+        // En-tête RAPPORT
+        $sheet->getStyle('B1')->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('E8E8E8');
+
+        // Headers POINTAGES
+        $sheet->getStyle('B5:H5')->getFont()->setBold(true); // Ligne 5 = headers pointages
+        $sheet->getStyle('B5:H5')->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('F2F2F2');
+
+        //Headers RÉCAP
+        $sheet->getStyle("B{$recapHeader}:E{$recapHeader}")->getFont()->setBold(true);
+        $sheet->getStyle("B{$recapHeader}:E{$recapHeader}")->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('F2F2F2');
+
+        //BORDURES COMPLÈTES (titres + headers + données)
+        $styleBordures = [
+            'borders' => [
+                'outline' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                    'color' => ['rgb' => '999999']
+                ]
+            ]
+        ];
+        $sheet->getStyle("B4:H{$finPointages}")->applyFromArray($styleBordures);
+        $sheet->getStyle("B{$recapTitre}:E{$finRecap}")->applyFromArray($styleBordures);
+
+        // Alignement
+        $sheet->getStyle('D5:H' . $finRecap)->getAlignment()->setHorizontal('center');
+
+        // Auto-dimensionnement
+        foreach (range('B', 'H') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        $sheet->getColumnDimension('A')->setWidth(3);
+
+        // SAUVEGARDE
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($tempFile);
+
+        $response = new \Symfony\Component\HttpFoundation\BinaryFileResponse($tempFile);
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', \Symfony\Component\HttpFoundation\ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'pointages_' . date('Y-m-d') . '.xlsx');
+
+        register_shutdown_function(function () use ($tempFile) {
+            if (file_exists($tempFile))
+                unlink($tempFile);
+        });
+
+        return $response;
+    }
 }

@@ -146,6 +146,7 @@
                 <tr>
                     <th>Utilisateur</th>
                     <th>Période</th>
+                    <th>Jours travaillés</th>  <!-- ✅ NOUVEAU -->
                     <th>Total</th>
                 </tr>
             </thead>
@@ -163,12 +164,13 @@
                                     du {{ dateStart|date('d/m/Y') }} au {{ dateEnd|date('d/m/Y') }}
                                 {% endif %}
                             </td>
+                            <td>{{ row.joursTravailles }}</td>
                             <td class="total">{{ row.totalFormatted }}</td>
                         </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="3" class="empty">Aucun pointage sur la période sélectionnée</td>
+                        <td colspan="4" class="empty">Aucun pointage sur la période sélectionnée</td>  <!-- 3→4 -->
                     </tr>
                 {% endif %}
             </tbody>
