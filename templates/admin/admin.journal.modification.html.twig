@@ -1,0 +1,187 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Journal des modifications{% endblock %}
+
+{% block body %}
+    <div class="page-modifications">
+        <div class="card-pointage">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <h5 class="mb-0">Journal des modifications</h5>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ path('admin.pointage') }}" class="btn btn-outline-secondary btn-sm">
+                        Pointages
+                    </a>
+                    <a href="{{ path('admin.utilisateurs') }}" class="btn btn-outline-secondary btn-sm">
+                        Utilisateurs
+                    </a>
+                    <a href="{{ path('app_logout') }}" class="btn btn-outline-danger btn-sm">
+                        Déconnexion
+                    </a>
+                </div>
+            </div>
+            {# FILTRES #}
+            <div class="compact-filters mb-4">
+                <div class="d-flex align-items-center gap-3 p-3 bg-light rounded">
+                    {# Type #}
+                    <div>
+                        <label class="d-block mb-1 small text-muted fw-bold">Type</label>
+                        <select class="form-select form-select-sm" style="width: 120px;" 
+                                onchange="filterLogs('type', this.value)">
+                            <option value="all" {% if typeFilter == 'all' %}selected{% endif %}>Tous</option>
+                            <option value="pointage" {% if typeFilter == 'pointage' %}selected{% endif %}>Pointages</option>
+                            <option value="user" {% if typeFilter == 'user' %}selected{% endif %}>Utilisateurs</option>
+                        </select>
+                    </div>
+
+                    {# Action #}
+                    <div>
+                        <label class="d-block mb-1 small text-muted fw-bold">Action</label>
+                        <select class="form-select form-select-sm" style="width: 140px;" 
+                                onchange="filterLogs('action', this.value)">
+                            <option value="all" {% if actionFilter == 'all' %}selected{% endif %}>Toutes</option>
+                            <option value="CREATION_UTILISATEUR" {% if actionFilter == 'CREATION_UTILISATEUR' %}selected{% endif %}>Création</option>
+                            <option value="MODIFICATION_POINTAGE" {% if actionFilter == 'MODIFICATION_POINTAGE' %}selected{% endif %}>Modification</option>
+                            <option value="SUPPRESSION" {% if actionFilter == 'SUPPRESSION' %}selected{% endif %}>Suppression</option>
+                            <option value="USER_ACTIVE" {% if actionFilter == 'USER_ACTIVE' %}selected{% endif %}>Activation</option>
+                            <option value="USER_DESACTIVE" {% if actionFilter == 'USER_DESACTIVE' %}selected{% endif %}>Désactivation</option>
+                            <option value="CHANGE_PASSWORD" {% if actionFilter == 'CHANGE_PASSWORD' %}selected{% endif %}>Mot de passe</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {# TABLEAU DES MODIFICATIONS #}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 140px;">Date</th>
+                            <th style="width: 100px;">Type</th>
+                            <th style="width: 140px;">Action</th>
+                            <th style="width: 180px;">Objet concerné</th>
+                            <th>Détails</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for modification in modifications %}
+                            <tr>
+                                <td>
+                                    {{ modification.date|date('d/m H:i') }}<br>
+                                    <small class="text-muted">{{ modification.date|date('H:i:s') }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge {{ modification.type == 'pointage' ? 'bg-primary' : 'bg-info' }}">
+                                        {{ modification.type == 'pointage' ? 'Pointage' : 'Utilisateur' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary" style="font-size: 0.75rem;">
+                                        {{ modification.action }}
+                                    </span>
+                                </td>
+                                <td class="text-center" style="width: 200px;">
+                                    {% if modification.type == 'pointage' %}
+                                        {# POINTAGE : user depuis .user + date #}
+                                        {% set pointageData = modification.nouvellesDonnees ?? modification.anciennesDonnees ?? {} %}
+                                        <div class="text-start ms-2">
+                                            <small class="fw-bold ">
+                                                {{ pointageData.user ?? 'N/A' }}
+                                            </small><br>
+                                            <small class="text-muted">
+                                                {{ pointageData.date ?? 'N/A' }}
+                                            </small>
+                                        </div>
+
+                                    {% elseif modification.type == 'user' %}
+                                        {# UTILISATEUR : username depuis JSON #}
+                                        {% set userData = modification.nouvellesDonnees ?? modification.anciennesDonnees ?? {} %}
+                                        <div class="text-start ms-2">
+                                            <small class="fw-bold">
+                                                {{ userData.username ?? userData.nom ?? 'Utilisateur' }}
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% set old = modification.anciennesDonnees|default({}) %}
+                                    {% set new = modification.nouvellesDonnees|default({}) %}
+
+                                    {# Messages spécifiques pour suppressions et mot de passe #}
+                                    {% if modification.action == 'SUPPRESSION_UTILISATEUR' %}
+                                        <span>Utilisateur supprimé</span>
+                                    {% elseif modification.action == 'SUPPRESSION_POINTAGE' %}
+                                        <span>Pointage supprimé</span>
+                                    {% elseif modification.action == 'CHANGE_PASSWORD' %}
+                                        <span>Mot de passe changé</span>
+                                    {% elseif modification.action == 'USER_ACTIVE' %}
+                                        <span>Utilisateur activé</span>
+                                    {% elseif modification.action == 'USER_DESACTIVE' %}
+                                        <span>Utilisateur désactivé</span>
+                                    {% elseif modification.action == 'CREATION_UTILISATEUR' %}
+                                        <span>Création d'utilisateur</span>
+                                    {% else %}
+                                        {# COMPARAISON HORAIRES SEULEMENT (pas de total) #}
+                                        {% for key, value in new %}
+                                            {% if old[key] is defined and old[key] != value %}
+                                                {# IGNORER le champ 'total' #}
+                                                {% if key != 'total' %}
+                                                    <div class="mb-1">
+                                                        <span class="text-muted small">{{ key|replace({'_': ' '})|title|replace({'Heure Arrivee': 'Arrivée', 'Heure Depart': 'Départ'}) }}</span><br>
+                                                        <span class="text-decoration-line-through text-danger">{{ old[key] }}</span>
+                                                        <span class="ms-2 text-success fw-bold">→ {{ value }}</span>
+                                                    </div>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+
+                                    {# Aperçu utilisateur #}
+                                    {% if modification.nouvellesDonnees.utilisateur ?? null %}
+                                        <hr class="my-1">
+                                        <small class="text-muted">Par : {{ modification.nouvellesDonnees.utilisateur }}</small>
+                                    {% endif %}
+                                </td>
+
+
+
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="fas fa-clipboard-list me-2"></i>
+                                    Aucune modification enregistrée
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+
+        </div>
+    </div>
+
+    <script>
+        function filterLogs(filterType, value) {
+            const url = new URL(window.location);
+            if (value === 'all') {
+                url.searchParams.delete(filterType);
+            } else {
+                url.searchParams.set(filterType, value);
+            }
+            url.searchParams.set('page', '1');
+            window.location = url;
+        }
+    </script>
+
+    <style>
+        .page-modifications .badge {
+            font-size: 0.8em;
+        }
+        .page-modifications .text-decoration-line-through {
+            font-size: 0.85em;
+        }
+    </style>
+
+{% endblock %}

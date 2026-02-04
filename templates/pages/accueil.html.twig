@@ -8,65 +8,66 @@
 {% endblock %}
 
 {% block body %}
-<div class="page-pointage">
-    <div class="card-pointage">
-        <p class="user">Bonjour {{ app.user.prenom }},</p>
+    <div class="page-pointage">
+        <div class="card-pointage">
+            <p class="user">Bonjour {{ app.user.prenom }},</p>
 
-        <p class="date" id="date"></p>
-        <div class="heure" id="heure"></div>
+            <p class="date" id="date"></p>
+            <div class="heure" id="heure"></div>
 
-        {% if hasEntree %}
-            <p class="info-embauche">
-                Heure d'embauche : {{ heureEntree }}
-            </p>
-            <p class="info-duree" id="duree">Durée : 00:00:00</p>
-        {% endif %}
+            {% if hasEntree %}
+                <p class="info-embauche">
+                    Heure d'embauche : {{ heureEntree|date('H:i:s') }}
+                </p>
 
-        <div class="actions">
-            {% if not hasEntree %}
-                <form method="post">
-                    <input type="hidden" name="type" value="entrée">
-                    <button class="btn btn-entree">Entrée</button>
-                </form>
+                <p class="info-duree" id="duree">Durée : 00:00:00</p>
             {% endif %}
 
-            {% if hasEntree and not pauseTerminee %}
-                {% if not enPause %}
+            <div class="actions">
+                {% if not hasEntree %}
                     <form method="post">
-                        <input type="hidden" name="type" value="pause">
-                        <button class="btn btn-pause">Pause</button>
-                    </form>
-                {% else %}
-                    <form method="post">
-                        <input type="hidden" name="type" value="reprise">
-                        <button class="btn btn-pause">Reprendre</button>
+                        <input type="hidden" name="type" value="entrée">
+                        <button class="btn btn-entree">Entrée</button>
                     </form>
                 {% endif %}
-            {% endif %}
 
-            {% if hasEntree and not enPause %}
-                <form method="post">
-                    <input type="hidden" name="type" value="sortie">
-                    <button class="btn btn-sortie">Sortie</button>
-                </form>
-            {% endif %}
+                {% if hasEntree and not pauseTerminee %}
+                    {% if not enPause %}
+                        <form method="post">
+                            <input type="hidden" name="type" value="pause">
+                            <button class="btn btn-pause">Pause</button>
+                        </form>
+                    {% else %}
+                        <form method="post">
+                            <input type="hidden" name="type" value="reprise">
+                            <button class="btn btn-pause">Reprendre</button>
+                        </form>
+                    {% endif %}
+                {% endif %}
+
+                {% if hasEntree and not enPause %}
+                    <form method="post">
+                        <input type="hidden" name="type" value="sortie">
+                        <button class="btn btn-sortie">Sortie</button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <p class="info">
+                Veuillez pointer à votre arrivée et à votre départ.
+            </p>
+
+            <hr>
+
+            <a href="{{ path('app_logout') }}" class="logout-link">
+                Déconnexion
+            </a>
         </div>
-
-        <p class="info">
-            Veuillez pointer à votre arrivée et à votre départ.
-        </p>
-
-        <hr>
-
-        <a href="{{ path('app_logout') }}" class="logout-link">
-            Déconnexion
-        </a>
     </div>
-</div>
 
 
     <script>
-        
+
         // HORLOGE & DATE
         function updateDate() {
             const now = new Date();
@@ -78,7 +79,7 @@
             };
             const dateString = now.toLocaleDateString('fr-FR', options);
             document.getElementById('date').innerText =
-                dateString.charAt(0).toUpperCase() + dateString.slice(1);
+                    dateString.charAt(0).toUpperCase() + dateString.slice(1);
         }
 
         function updateTime() {
@@ -96,7 +97,7 @@
             const heureDebutPause = "{{ heureDebutPause ?? '' }}";
             const heureFinPause = "{{ heureFinPause ?? '' }}";
             const enPause = {{ enPause ? 'true' : 'false' }};
-            const dureeElement = document.getElementById('duree');
+                    const dureeElement = document.getElementById('duree');
 
             function parseTimeToDate(time) {
                 if (!time) {
@@ -133,130 +134,130 @@
                 const secondes = Math.floor((diff % 60000) / 1000);
 
                 dureeElement.innerText =
-                    'Durée : ' +
-                    String(heures).padStart(2, '0') + ':' +
-                    String(minutes).padStart(2, '0') + ':' +
-                    String(secondes).padStart(2, '0');
+                        'Durée : ' +
+                        String(heures).padStart(2, '0') + ':' +
+                        String(minutes).padStart(2, '0') + ':' +
+                        String(secondes).padStart(2, '0');
             }
 
             updateDuree();
             setInterval(updateDuree, 1000);
         {% endif %}
-            
-        // GÉOLOCALISATION
-        let userLocation = null;
 
-        const BUREAU_LAT = 46.8043279;
-        const BUREAU_LNG = 1.6793064;
-        const MAX_DISTANCE = 0.5; // 500 m en km
+            // GÉOLOCALISATION
+            let userLocation = null;
 
-        function getDistance(lat1, lng1, lat2, lng2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const BUREAU_LAT = 46.8034232;
+            const BUREAU_LNG = 1.6719998;
+            const MAX_DISTANCE = 0.5; // 500 m en km
 
-            const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(lat1 * Math.PI / 180) *
-                Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            function getDistance(lat1, lng1, lat2, lng2) {
+                const R = 6371;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLng = (lng2 - lng1) * Math.PI / 180;
 
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-        }
+                const a =
+                        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                        Math.cos(lat1 * Math.PI / 180) *
+                        Math.cos(lat2 * Math.PI / 180) *
+                        Math.sin(dLng / 2) * Math.sin(dLng / 2);
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                function (position) {
-                    userLocation = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    };
-                    console.log('✅ Géolocalisation OK:', userLocation);
-                },
-                function (error) {
-                    console.error('❌ Erreur géolocalisation:', error);
-                    alert('⚠️ Activez la géolocalisation pour pouvoir pointer.');
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 60000
-                }
-            );
-        } else {
-            alert('❌ Géolocalisation non supportée par ce navigateur.');
-        }
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return R * c;
+            }
 
-        // Retry géolocalisation si échec initial
-        setInterval(function () {
-            if (navigator.geolocation && !userLocation) {
+            if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    function (pos) {
-                        userLocation = {
-                            lat: pos.coords.latitude,
-                            lng: pos.coords.longitude
-                        };
-                        console.log('🔄 Géolocalisation récupérée:', userLocation);
-                    },
-                    function () {},
-                    { enableHighAccuracy: true }
+                        function (position) {
+                            userLocation = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            console.log('✅ Géolocalisation OK:', userLocation);
+                        },
+                        function (error) {
+                            console.error('❌ Erreur géolocalisation:', error);
+                            alert('⚠️ Activez la géolocalisation pour pouvoir pointer.');
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 60000
+                        }
                 );
-            }
-        }, 5000);
-
-        // INTERCEPTION DES FORMULAIRES
-        document.addEventListener('submit', function (e) {
-            if (!e.target.matches('form[method="post"]')) {
-                return;
+            } else {
+                alert('❌ Géolocalisation non supportée par ce navigateur.');
             }
 
-            e.preventDefault();
+            // Retry géolocalisation si échec initial
+            setInterval(function () {
+                if (navigator.geolocation && !userLocation) {
+                    navigator.geolocation.getCurrentPosition(
+                            function (pos) {
+                                userLocation = {
+                                    lat: pos.coords.latitude,
+                                    lng: pos.coords.longitude
+                                };
+                                console.log('🔄 Géolocalisation récupérée:', userLocation);
+                            },
+                            function () {},
+                            {enableHighAccuracy: true}
+                    );
+                }
+            }, 5000);
 
-            if (!userLocation) {
-                alert('⚠️ Activez la géolocalisation pour pointer.');
-                return;
-            }
+            // INTERCEPTION DES FORMULAIRES
+            document.addEventListener('submit', function (e) {
+                if (!e.target.matches('form[method="post"]')) {
+                    return;
+                }
 
-            const distance = getDistance(
-                userLocation.lat,
-                userLocation.lng,
-                BUREAU_LAT,
-                BUREAU_LNG
-            );
+                e.preventDefault();
 
-            if (distance > MAX_DISTANCE) {
-                alert(
-                    '🚫 Trop loin du bureau\n' +
-                    Math.round(distance * 1000) +
-                    'm (max 500m)'
-                );
-                return;
-            }
+                if (!userLocation) {
+                    alert('⚠️ Activez la géolocalisation pour pointer.');
+                    return;
+                }
 
-            const form = e.target;
+                const distance = getDistance(
+                        userLocation.lat,
+                        userLocation.lng,
+                        BUREAU_LAT,
+                        BUREAU_LNG
+                        );
 
-            const latInput = document.createElement('input');
-            latInput.type = 'hidden';
-            latInput.name = 'latitude';
-            latInput.value = userLocation.lat.toString();
+                if (distance > MAX_DISTANCE) {
+                    alert(
+                            '🚫 Trop loin du bureau\n' +
+                            Math.round(distance * 1000) +
+                            'm (max 500m)'
+                            );
+                    return;
+                }
 
-            const lngInput = document.createElement('input');
-            lngInput.type = 'hidden';
-            lngInput.name = 'longitude';
-            lngInput.value = userLocation.lng.toString();
+                const form = e.target;
 
-            form.appendChild(latInput);
-            form.appendChild(lngInput);
+                const latInput = document.createElement('input');
+                latInput.type = 'hidden';
+                latInput.name = 'latitude';
+                latInput.value = userLocation.lat.toString();
 
-            console.log(
-                '✅ Pointage autorisé - Distance:',
-                Math.round(distance * 1000),
-                'm'
-            );
+                const lngInput = document.createElement('input');
+                lngInput.type = 'hidden';
+                lngInput.name = 'longitude';
+                lngInput.value = userLocation.lng.toString();
 
-            form.submit();
-        });
+                form.appendChild(latInput);
+                form.appendChild(lngInput);
+
+                console.log(
+                        '✅ Pointage autorisé - Distance:',
+                        Math.round(distance * 1000),
+                        'm'
+                        );
+
+                form.submit();
+            });
     </script>
 
 {% endblock %}

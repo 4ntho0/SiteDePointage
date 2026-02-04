@@ -157,7 +157,8 @@ class Pointage {
 
         // Soustraction de la pause si elle existe
         if ($this->heureDebutPause && $this->heureFinPause) {
-            $pause = $this->heureFinPause->getTimestamp() - $this->heureDebutPause->getTimestamp();
+            $pause = $this->heureFinPause->getTimestamp() - $this->
+                    heureDebutPause->getTimestamp();
 
             $total -= $pause;
         }

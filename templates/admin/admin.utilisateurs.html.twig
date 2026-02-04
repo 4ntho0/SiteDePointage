@@ -2,9 +2,20 @@
 {% block body %}
     <div class="page-pointage">
         <div class="card-pointage" data-admin-id="{{ app.user.id }}">
-            <a href="{{ path('admin.pointage') }}" class="btn-top-nav">Gestion des Pointages</a>
-            <a href="{{ path('app_logout') }}" class="btn-logout">Déconnexion</a>
-            <h5>Gestion des utilisateurs</h5>
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <h5 class="mb-0">Gestion des utilisateurs</h5>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ path('admin.pointage') }}" class="btn btn-outline-secondary btn-sm">
+                        Pointages
+                    </a>
+                    <a href="{{ path('admin.modifications') }}" class="btn btn-outline-secondary btn-sm">
+                        Journal des modifications
+                    </a>
+                    <a href="{{ path('app_logout') }}" class="btn btn-outline-danger btn-sm">
+                        Déconnexion
+                    </a>
+                </div>
+            </div>
 
             <div class="d-flex mb-3 align-items-center justify-content-between"><!-- Partie gauche : label + select -->
                 <div class="d-flex align-items-center">

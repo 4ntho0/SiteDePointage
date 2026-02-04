@@ -8,40 +8,41 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class PointageRepository extends ServiceEntityRepository {
 
+    private const FORMAT_DATE_SQL = 'Y-m-d';
+    private const CHAMP_DATE_POINTAGE = 'datePointage';
+    private const CHAMP_UTILISATEUR = 'utilisateur';
+    private const CHAMP_USERNAME = 'u.username';
+    private const ORDRE_ASC = 'ASC';
+    private const ORDRE_DESC = 'DESC';
+    private const CONDITION_DATE_GE = 'p.datePointage >= :dateStart';
+    private const CONDITION_DATE_LE = 'p.datePointage <= :dateEnd';
+    private const CONDITION_DATE_BETWEEN = 'p.datePointage BETWEEN :start AND :end';
+    private const CONDITION_USER_IN = 'u.username IN (:users)';
+    private const CONDITION_USER_EQ = 'u.username = :username';
+
     public function __construct(ManagerRegistry $registry) {
         parent::__construct($registry, Pointage::class);
     }
 
-    /**
-     * Retourne tous les pointages triés, filtrés et limités
-     *
-     * @param string $champ : champ pour le tri ('datePointage' ou 'utilisateur')
-     * @param string $ordre : 'ASC' ou 'DESC'
-     * @param string|null $username : filtre par utilisateur
-     * @param int|null $limit : nombre maximum de résultats
-     * @return Pointage[]
-     */
-    public function findAllOrderByField(string $champ, string $ordre, ?string $username = null, ?int $limit = null): array {
+    public function findAllOrderByField
+    (string $champ, string $ordre, ?string $username = null, ?int $limit = null): array {
         $qb = $this->createQueryBuilder('p')
                 ->join('p.utilisateur', 'u');
 
-        // Appliquer le filtre utilisateur si présent
         if ($username) {
-            $qb->where('u.username = :username')
+            $qb->where(self::CONDITION_USER_EQ)
                     ->setParameter('username', $username);
         }
 
-        // Tri
-        if ($champ === 'datePointage') {
+        if ($champ === self::CHAMP_DATE_POINTAGE) {
             $qb->orderBy('p.datePointage', $ordre)
-                    ->addOrderBy('p.heureEntree', $ordre); // tri secondaire sur l'heure
-        } elseif ($champ === 'utilisateur') {
-            $qb->orderBy('u.username', $ordre)
-                    ->addOrderBy('p.datePointage', 'DESC')
-                    ->addOrderBy('p.heureEntree', 'DESC');
+                    ->addOrderBy('p.heureEntree', $ordre);
+        } elseif ($champ === self::CHAMP_UTILISATEUR) {
+            $qb->orderBy(self::CHAMP_USERNAME, $ordre)
+                    ->addOrderBy('p.datePointage', self::ORDRE_DESC)
+                    ->addOrderBy('p.heureEntree', self::ORDRE_DESC);
         }
 
-        // Limiter le nombre de résultats si demandé
         if ($limit) {
             $qb->setMaxResults($limit);
         }
@@ -49,39 +50,23 @@ class PointageRepository extends ServiceEntityRepository {
         return $qb->getQuery()->getResult();
     }
 
-    /**
-     * Retourne tous les noms d'utilisateurs uniques
-     *
-     * @return array
-     */
     public function getAllUsernames(): array {
         return $this->createQueryBuilder('p')
                         ->select('DISTINCT u.username')
                         ->join('p.utilisateur', 'u')
-                        ->orderBy('u.username', 'ASC')
+                        ->orderBy(self::CHAMP_USERNAME, self::ORDRE_ASC)
                         ->getQuery()
                         ->getResult();
     }
 
-    /**
-     * Supprime un pointage
-     */
     public function remove(Pointage $pointage): void {
         $this->getEntityManager()->remove($pointage);
         $this->getEntityManager()->flush();
     }
 
-    /**
-     * Récupère tous les pointages triés par champ avec filtres utilisateur et dates
-     * @param string $champ
-     * @param string $ordre
-     * @param string|null $userFilter
-     * @param \DateTimeInterface|null $dateStart
-     * @param \DateTimeInterface|null $dateEnd
-     * @return Pointage[]
-     */
     public function findAllOrderByFieldWithLimit(
-            string $champ, string $ordre,
+            string $champ,
+            string $ordre,
             ?string $userFilter = null,
             ?\DateTimeInterface $dateStart = null,
             ?\DateTimeInterface $dateEnd = null
@@ -90,40 +75,32 @@ class PointageRepository extends ServiceEntityRepository {
 
         if ($userFilter) {
             $users = explode(',', $userFilter);
-            $qb->andWhere('u.username IN (:users)')
+            $qb->andWhere(self::CONDITION_USER_IN)
                     ->setParameter('users', $users);
         }
 
         if ($dateStart) {
-            $qb->andWhere('p.datePointage >= :dateStart')
-                    ->setParameter('dateStart', $dateStart->format('Y-m-d'));
+            $qb->andWhere(self::CONDITION_DATE_GE)
+                    ->setParameter('dateStart', $dateStart->format(self::FORMAT_DATE_SQL));
         }
 
         if ($dateEnd) {
-            $qb->andWhere('p.datePointage <= :dateEnd')
-                    ->setParameter('dateEnd', $dateEnd->format('Y-m-d'));
+            $qb->andWhere(self::CONDITION_DATE_LE)
+                    ->setParameter('dateEnd', $dateEnd->format(self::FORMAT_DATE_SQL));
         }
 
-        if ($champ === 'datePointage') {
+        if ($champ === self::CHAMP_DATE_POINTAGE) {
             $qb->orderBy('p.datePointage', $ordre)
                     ->addOrderBy('p.heureEntree', $ordre);
-        } elseif ($champ === 'utilisateur') {
-            $qb->orderBy('u.username', $ordre)
-                    ->addOrderBy('p.datePointage', 'DESC')
-                    ->addOrderBy('p.heureEntree', 'DESC');
+        } elseif ($champ === self::CHAMP_UTILISATEUR) {
+            $qb->orderBy(self::CHAMP_USERNAME, $ordre)
+                    ->addOrderBy('p.datePointage', self::ORDRE_DESC)
+                    ->addOrderBy('p.heureEntree', self::ORDRE_DESC);
         }
 
         return $qb->getQuery()->getResult();
     }
 
-    /**
-     * renvoie le nombre total de pointages correspondant à des filtres
-     * sur l’utilisateur
-     * @param string|null $userFilter
-     * @param \DateTimeInterface|null $dateStart
-     * @param \DateTimeInterface|null $dateEnd
-     * @return int
-     */
     public function countFiltered(
             ?string $userFilter = null,
             ?\DateTimeInterface $dateStart = null,
@@ -135,46 +112,47 @@ class PointageRepository extends ServiceEntityRepository {
         if ($userFilter) {
             $qb->join('p.utilisateur', 'u');
             $users = explode(',', $userFilter);
-            $qb->andWhere('u.username IN (:users)')
+            $qb->andWhere(self::CONDITION_USER_IN)
                     ->setParameter('users', $users);
         }
 
         if ($dateStart) {
-            $qb->andWhere('p.datePointage >= :dateStart')
-                    ->setParameter('dateStart', $dateStart->format('Y-m-d'));
+            $qb->andWhere(self::CONDITION_DATE_GE)
+                    ->setParameter('dateStart', $dateStart->format(self::FORMAT_DATE_SQL));
         }
 
         if ($dateEnd) {
-            $qb->andWhere('p.datePointage <= :dateEnd')
-                    ->setParameter('dateEnd', $dateEnd->format('Y-m-d'));
+            $qb->andWhere(self::CONDITION_DATE_LE)
+                    ->setParameter('dateEnd', $dateEnd->format(self::FORMAT_DATE_SQL));
         }
 
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
-    public function getRecapParUtilisateur(?\DateTimeInterface $dateStart, ?\DateTimeInterface $dateEnd, ?string $userFilter = null): array {
+    public function getRecapParUtilisateur(
+            ?\DateTimeInterface $dateStart,
+            ?\DateTimeInterface $dateEnd,
+            ?string $userFilter = null
+    ): array {
         $qb = $this->createQueryBuilder('p')
                 ->join('p.utilisateur', 'u')
                 ->addSelect('u')
-                ->orderBy('u.username', 'ASC');
+                ->orderBy(self::CHAMP_USERNAME, self::ORDRE_ASC);
 
-        // Filtre date seulement si dates définies (pas en mode global)
         if ($dateStart && $dateEnd) {
-            $qb->where('p.datePointage BETWEEN :start AND :end')
-                    ->setParameter('start', $dateStart->format('Y-m-d'))
-                    ->setParameter('end', $dateEnd->format('Y-m-d'));
+            $qb->where(self::CONDITION_DATE_BETWEEN)
+                    ->setParameter('start', $dateStart->format(self::FORMAT_DATE_SQL))
+                    ->setParameter('end', $dateEnd->format(self::FORMAT_DATE_SQL));
         }
 
-        // Filtre utilisateur
         if ($userFilter && $userFilter !== 'all') {
             $userFilters = explode(',', $userFilter);
-            $qb->andWhere('u.username IN (:users)')
+            $qb->andWhere(self::CONDITION_USER_IN)
                     ->setParameter('users', $userFilters);
         }
 
         $pointages = $qb->getQuery()->getResult();
 
-        // Agrégation des totaux par utilisateur
         $result = [];
         foreach ($pointages as $pointage) {
             /** @var \App\Entity\Pointage $pointage */
@@ -199,26 +177,19 @@ class PointageRepository extends ServiceEntityRepository {
 
             $datePointage = $pointage->getDatePointage();
             if ($datePointage) {
-                $result[$userId]['joursTravailles'][] = $datePointage->format('Y-m-d');
+                $result[$userId]['joursTravailles'][] = $datePointage->format(self::FORMAT_DATE_SQL);
             }
         }
 
         foreach ($result as &$row) {
-            // Compter les jours distincts
             $row['joursTravailles'] = count(array_unique($row['joursTravailles']));
 
-            // Formatage du total
             $seconds = $row['totalSeconds'];
             $hours = floor($seconds / 3600);
             $minutes = floor(($seconds % 3600) / 60);
             $secs = $seconds % 60;
 
-            $row['totalFormatted'] = sprintf(
-                    '%02d:%02d:%02d',
-                    $hours,
-                    $minutes,
-                    $secs
-            );
+            $row['totalFormatted'] = sprintf('%02d:%02d:%02d', $hours, $minutes, $secs);
         }
         unset($row);
 

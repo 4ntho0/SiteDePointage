@@ -9,70 +9,83 @@
         'page': 1
     }) %}
 
-   
+
 
     <div class="page-pointage">
         <div class="card-pointage">
-            <a href="{{ path('admin.utilisateurs') }}" class="btn-top-nav">Gestion utilisateurs</a>
-            <a href="{{ path('app_logout') }}" class="btn-logout">Déconnexion</a>
-            <h5>Liste des pointages</h5>
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <h5 class="mb-0">Liste des pointages</h5>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ path('admin.utilisateurs') }}" class="btn btn-outline-secondary btn-sm">
+                        Utilisateurs
+                    </a>
+                    <a href="{{ path('admin.modifications') }}" class="btn btn-outline-secondary btn-sm">
+                        Journal des modifications
+                    </a>
+                    <a href="{{ path('app_logout') }}" class="btn btn-outline-danger btn-sm">
+                        Déconnexion
+                    </a>
+                </div>
+            </div>
 
             {# FILTRES#}
-            <div class="compact-filters mb-4">
-                <div class="d-flex align-items-center gap-3 p-3 bg-light rounded" style="font-size: 0.9rem;">
+            <div class="table-responsive">
+                <div class="compact-filters mb-4">
+                    <div class="d-flex align-items-center gap-3 p-3 bg-light rounded" style="font-size: 0.9rem;">
 
-                    {# Utilisateurs #}
-                    <div>
-                        <label class="d-block mb-1 small text-muted fw-bold">Utilisateurs</label>
-                        <select class="form-select form-select-sm" multiple size="3" style="width: 150px;" onchange="updateUsersFilter();">
-                            <option value="all" {% if not userFilter or userFilter == 'all' %}selected{% endif %}>Tous</option>
-                            {% for u in users %}
-                                <option value="{{ u.username }}" {% if userFilter and u.username in userFilters %}selected{% endif %}>{{ u.username }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    {# Séparateur #}
-                    <div class="vr mx-2"></div>
-
-                    {# Période#}
-                    <div>
-                        {% if dateStartInput and dateEndInput %}
-                            <div class="p-2 bg-info bg-opacity-10 border rounded text-primary fw-semibold">
-                                {{ dateStartInput|date('d/m/Y') }} → {{ dateEndInput|date('d/m/Y') }}
-                                <br><small class="text-muted">
-                                    <a href="#" onclick="clearDateFilter();
-                                            return false;" class="link-underline link-underline-opacity-0-hover">Effacer</a>
-                                </small>
-                            </div>
-                        {% else %}
-                            <label class="d-block mb-1 small text-muted fw-bold">Périodicité</label>
-                            <select class="form-select form-select-sm" style="width: 100px;" onchange="location = this.value;">
-                                <option value="{{ basePath ~ '&period=day&page=1' }}" {% if period == 'day' %}selected{% endif %}>Jour</option>
-                                <option value="{{ basePath ~ '&period=week&page=1' }}" {% if period == 'week' %}selected{% endif %}>Semaine</option>
-                                <option value="{{ basePath ~ '&period=month&page=1' }}" {% if period == 'month' %}selected{% endif %}>Mois</option>
-                                <option value="{{ basePath ~ '&period=year&page=1' }}" {% if period == 'year' %}selected{% endif %}>Année</option>
-                                <option value="{{ basePath ~ '&period=global' }}" {% if period == 'global' %}selected{% endif %}>Tout</option>
+                        {# Utilisateurs #}
+                        <div>
+                            <label class="d-block mb-1 small text-muted fw-bold">Utilisateurs</label>
+                            <select class="form-select form-select-sm" multiple size="3" style="width: 150px;" onchange="updateUsersFilter();">
+                                <option value="all" {% if not userFilter or userFilter == 'all' %}selected{% endif %}>Tous</option>
+                                {% for u in users %}
+                                    <option value="{{ u.username }}" {% if userFilter and u.username in userFilters %}selected{% endif %}>{{ u.username }}</option>
+                                {% endfor %}
                             </select>
-                        {% endif %}
-                    </div>
-
-                    {# Dates personnalisées #}
-                    {% if not dateStartInput or not dateEndInput %}            
-                        <div class="vr mx-2 d-none d-md-block"></div>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white border-end-0 px-2">Du</span>
-                            <input type="date" id="date_start" class="form-control form-control-sm border-start-0" value="{{ dateStartInput|default('') }}">
-                            <span class="input-group-text bg-white border-start-0 border-end-0 px-2">Au</span>
-                            <input type="date" id="date_end" class="form-control form-control-sm border-end-0" value="{{ dateEndInput|default('') }}">
-                            <button class="btn btn-outline-primary btn-sm px-3" onclick="applyDateFilter()" title="Appliquer">OK</button>
                         </div>
-                    {% endif %}
 
-                    <div class="ms-auto gap-2 d-flex">
-                        <a href="{{ path('admin.pointage.export.pdf', app.request.query.all) }}" class="btn btn-sm btn-add px-3">Exporter PDF</a>
-                        <a href="{{ path('admin.pointage.export.excel', app.request.query.all) }}" class="btn btn-sm btn-add px-3">Exporter Excel</a>
+                        {# Séparateur #}
+                        <div class="vr mx-2"></div>
 
+                        {# Période#}
+                        <div>
+                            {% if dateStartInput and dateEndInput %}
+                                <div class="p-2 bg-info bg-opacity-10 border rounded text-primary fw-semibold">
+                                    {{ dateStartInput|date('d/m/Y') }} → {{ dateEndInput|date('d/m/Y') }}
+                                    <br><small class="text-muted">
+                                        <a href="#" onclick="clearDateFilter();
+                                            return false;" class="link-underline link-underline-opacity-0-hover">Effacer</a>
+                                    </small>
+                                </div>
+                            {% else %}
+                                <label class="d-block mb-1 small text-muted fw-bold">Périodicité</label>
+                                <select class="form-select form-select-sm" style="width: 100px;" onchange="location = this.value;">
+                                    <option value="{{ basePath ~ '&period=day&page=1' }}" {% if period == 'day' %}selected{% endif %}>Jour</option>
+                                    <option value="{{ basePath ~ '&period=week&page=1' }}" {% if period == 'week' %}selected{% endif %}>Semaine</option>
+                                    <option value="{{ basePath ~ '&period=month&page=1' }}" {% if period == 'month' %}selected{% endif %}>Mois</option>
+                                    <option value="{{ basePath ~ '&period=year&page=1' }}" {% if period == 'year' %}selected{% endif %}>Année</option>
+                                    <option value="{{ basePath ~ '&period=global' }}" {% if period == 'global' %}selected{% endif %}>Tout</option>
+                                </select>
+                            {% endif %}
+                        </div>
+
+                        {# Dates personnalisées #}
+                        {% if not dateStartInput or not dateEndInput %}            
+                            <div class="vr mx-2 d-none d-md-block"></div>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white border-end-0 px-2">Du</span>
+                                <input type="date" id="date_start" class="form-control form-control-sm border-start-0" value="{{ dateStartInput|default('') }}">
+                                <span class="input-group-text bg-white border-start-0 border-end-0 px-2">Au</span>
+                                <input type="date" id="date_end" class="form-control form-control-sm border-end-0" value="{{ dateEndInput|default('') }}">
+                                <button class="btn btn-outline-primary btn-sm px-3" onclick="applyDateFilter()" title="Appliquer">OK</button>
+                            </div>
+                        {% endif %}
+
+                        <div class="ms-auto gap-2 d-flex">
+                            <a href="{{ path('admin.pointage.export.pdf', app.request.query.all) }}" class="btn btn-sm btn-add px-3">Exporter PDF</a>
+                            <a href="{{ path('admin.pointage.export.excel', app.request.query.all) }}" class="btn btn-sm btn-add px-3">Exporter Excel</a>
+
+                        </div>
                     </div>
                 </div>
             </div>
@@ -99,54 +112,56 @@
 
 
             {# Tableau des pointages#}
-            <table class="table table-bordered table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th class="text-center">Utilisateur</th>
-                        <th class="text-center">Date</th>
-                        <th class="text-center">Entrée</th>
-                        <th class="text-center">Début pause</th>
-                        <th class="text-center">Fin pause</th>
-                        <th class="text-center">Sortie</th>
-                        <th class="text-center">Total</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for pointage in pointages %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
                         <tr>
-                            <td>{{ pointage.utilisateur ? pointage.utilisateur.username : 'Utilisateur inconnu' }}</td>
-                            <td class="text-center">{{ pointage.datePointage ? pointage.datePointage|date('d/m/Y') : 'N/A' }}</td>
-                            <td class="text-center">{{ pointage.heureEntree ? pointage.heureEntree|date('H:i') : '—' }}</td>
-                            <td class="text-center">{{ pointage.heureDebutPause ? pointage.heureDebutPause|date('H:i') : '—' }}</td>
-                            <td class="text-center">{{ pointage.heureFinPause ? pointage.heureFinPause|date('H:i') : '—' }}</td>
-                            <td class="text-center">{{ pointage.heureSortie ? pointage.heureSortie|date('H:i') : '—' }}</td>
-                            <td class="text-center font-weight-bold">{{ pointage.totalTravailFormatted ?? 'N/A' }}</td>
-                            <td class="text-center">
-                                <button class="btn btn-secondary btn-sm"
-                                        title="Modifier ce pointage"
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#editPointageModal" 
-                                        data-id="{{ pointage.id }}"
-                                        data-date="{{ pointage.datePointage ? pointage.datePointage|date('Y-m-d') : '' }}"
-                                        data-entree="{{ pointage.heureEntree ? pointage.heureEntree|date('H:i') : '' }}"
-                                        data-debut="{{ pointage.heureDebutPause ? pointage.heureDebutPause|date('H:i') : '' }}"
-                                        data-fin="{{ pointage.heureFinPause ? pointage.heureFinPause|date('H:i') : '' }}"
-                                        data-sortie="{{ pointage.heureSortie ? pointage.heureSortie|date('H:i') : '' }}">
-                                    Éditer
-                                </button>
-                                <a href="{{ path('admin.pointage.suppr',{id: pointage.id}) }}" class="btn btn-danger btn-sm" title="Supprimer ce pointage" onclick="return confirm('Etes-vous sûr de vouloir supprimer ce pointage ?')">Supprimer</a>
-                            </td>
+                            <th class="text-center">Utilisateur</th>
+                            <th class="text-center">Date</th>
+                            <th class="text-center">Entrée</th>
+                            <th class="text-center">Début pause</th>
+                            <th class="text-center">Fin pause</th>
+                            <th class="text-center">Sortie</th>
+                            <th class="text-center">Total</th>
+                            <th class="text-center">Actions</th>
                         </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="8" class="text-center text-muted">Aucun pointage enregistré</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-                
+                    </thead>
+                    <tbody>
+                        {% for pointage in pointages %}
+                            <tr>
+                                <td>{{ pointage.utilisateur ? pointage.utilisateur.username : 'Utilisateur inconnu' }}</td>
+                                <td class="text-center">{{ pointage.datePointage ? pointage.datePointage|date('d/m/Y') : 'N/A' }}</td>
+                                <td class="text-center">{{ pointage.heureEntree ? pointage.heureEntree|date('H:i') : '—' }}</td>
+                                <td class="text-center">{{ pointage.heureDebutPause ? pointage.heureDebutPause|date('H:i') : '—' }}</td>
+                                <td class="text-center">{{ pointage.heureFinPause ? pointage.heureFinPause|date('H:i') : '—' }}</td>
+                                <td class="text-center">{{ pointage.heureSortie ? pointage.heureSortie|date('H:i') : '—' }}</td>
+                                <td class="text-center font-weight-bold">{{ pointage.totalTravailFormatted ?? 'N/A' }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-secondary btn-sm"
+                                            title="Modifier ce pointage"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editPointageModal" 
+                                            data-id="{{ pointage.id }}"
+                                            data-date="{{ pointage.datePointage ? pointage.datePointage|date('Y-m-d') : '' }}"
+                                            data-entree="{{ pointage.heureEntree ? pointage.heureEntree|date('H:i') : '' }}"
+                                            data-debut="{{ pointage.heureDebutPause ? pointage.heureDebutPause|date('H:i') : '' }}"
+                                            data-fin="{{ pointage.heureFinPause ? pointage.heureFinPause|date('H:i') : '' }}"
+                                            data-sortie="{{ pointage.heureSortie ? pointage.heureSortie|date('H:i') : '' }}">
+                                        Éditer
+                                    </button>
+                                    <a href="{{ path('admin.pointage.suppr',{id: pointage.id}) }}" class="btn btn-danger btn-sm" title="Supprimer ce pointage" onclick="return confirm('Etes-vous sûr de vouloir supprimer ce pointage ?')">Supprimer</a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">Aucun pointage enregistré</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             <h5>Récapitulatif par utilisateur</h5>
+            <div class="table-responsive">
                 <table class="table table-bordered table-hover align-middle">
                     <thead class="table-light">
                         <tr>
@@ -170,7 +185,7 @@
                                             du {{ dateStart|date('d/m/Y') }} au {{ dateEnd|date('d/m/Y') }}
                                         {% endif %}
                                     </td>
-                                     <td class="text-center">{{ row.joursTravailles }}</td>
+                                    <td class="text-center">{{ row.joursTravailles }}</td>
                                     <td class="text-center font-weight-bold">{{ row.totalFormatted }}</td>
                                 </tr>
                             {% endfor %}
@@ -183,8 +198,7 @@
                         {% endif %}
                     </tbody>
                 </table>
-
-
+            </div>
         </div>
     </div>
     <!-- Modal Éditer Pointage -->
