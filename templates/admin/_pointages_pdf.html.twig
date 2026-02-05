@@ -1,179 +1,182 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Pointages {{ dateStart ? dateStart|date('d/m/Y') : 'Tous' }}</title>
-        <style>
+{% extends "base.html.twig" %}
+
+{% block title %}Rapport Pointages {{ dateStart ? dateStart|date('d/m/Y') : 'Tous' }}{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            color: #333;
+            background: #fff;
+            font-size: 14px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 22px;
+            color: #222;
+        }
+
+        h2 {
+            font-size: 13px;
+            font-weight: normal;
+            color: #555;
+            margin: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header p {
+            margin: 5px 0;
+            font-size: 13px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 25px;
+            border: 1px solid #ccc;
+        }
+
+        thead {
+            background: #f2f2f2;
+        }
+
+        th {
+            padding: 10px;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #333;
+            border-bottom: 1px solid #ccc;
+            text-align: center;
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .total {
+            font-weight: bold;
+            color: #000;
+            background-color: #f7f7f7;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            font-style: italic;
+        }
+
+        .recap-title {
+            font-size: 18px;
+            color: #222;
+            margin: 30px 0 10px 0;
+            text-align: center;
+        }
+
+        @media print {
             body {
-                font-family: Arial, sans-serif;
-                margin: 40px;
-                color: #333;
-                background: #fff;
-                font-size: 14px;
+                margin: 20px;
             }
-
-            h1 {
-                text-align: center;
-                margin-bottom: 10px;
-                font-size: 22px;
-                color: #222;
-            }
-
-            h2 {
-                font-size: 13px;
-                font-weight: normal;
-                color: #555;
-                margin: 0;
-            }
-
-            .header {
-                text-align: center;
-                margin-bottom: 20px;
-            }
-
-            .header p {
-                margin: 5px 0;
-                font-size: 13px;
-            }
-
             table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 15px;
-                margin-bottom: 25px;
-                border: 1px solid #ccc;
+                border: 1px solid #000;
             }
+        }
+    </style>
+{% endblock %}
 
-            thead {
-                background: #f2f2f2;
-            }
+{% block body %}
+    <h1>Rapport Pointages</h1>
 
-            th {
-                padding: 10px;
-                font-size: 12px;
-                text-transform: uppercase;
-                color: #333;
-                border-bottom: 1px solid #ccc;
-                text-align: center;
-            }
+    <div class="header">
+        <h2>Généré le {{ 'now'|date('d/m/Y à H:i') }}</h2>
+        {% if dateStart %}
+            <p><strong>Période :</strong> {{ dateStart|date('d/m/Y') }} → {{ dateEnd|date('d/m/Y') }}</p>
+        {% endif %}
+        {% if userFilter %}
+            <p><strong>Utilisateur(s) :</strong> {{ userFilter|split(',')|join(', ') }}</p>
+        {% endif %}
+    </div>
 
-            td {
-                padding: 8px;
-                border-bottom: 1px solid #eee;
-                text-align: center;
-            }
-
-            tbody tr:nth-child(even) {
-                background-color: #fafafa;
-            }
-
-            .total {
-                font-weight: bold;
-                color: #000;
-                background-color: #f7f7f7;
-            }
-
-            .empty {
-                text-align: center;
-                padding: 20px;
-                color: #777;
-                font-style: italic;
-            }
-
-            .recap-title {
-                font-size: 18px;
-                color: #222;
-                margin: 30px 0 10px 0;
-                text-align: center;
-            }
-
-            @media print {
-                body {
-                    margin: 20px;
-                }
-                table {
-                    border: 1px solid #000;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Rapport Pointages</h1>
-        <div class="header">
-            <h2>Généré le {{ 'now'|date('d/m/Y à H:i') }}</h2>
-            {% if dateStart %}
-                <p><strong>Période :</strong> {{ dateStart|date('d/m/Y') }} → {{ dateEnd|date('d/m/Y') }}</p>
-            {% endif %}
-            {% if userFilter %}
-                <p><strong>Utilisateur(s) :</strong> {{ userFilter|split(',')|join(', ') }}</p>
-            {% endif %}
-        </div>
-
-        <table>
-            <thead>
+    {# TABLEAU PRINCIPAL POINTAGES #}
+    <table>
+        <thead>
+            <tr>
+                <th>Utilisateur</th>
+                <th>Date</th>
+                <th>Entrée</th>
+                <th>Début pause</th>
+                <th>Fin pause</th>
+                <th>Sortie</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pointage in pointages %}
                 <tr>
-                    <th>Utilisateur</th>
-                    <th>Date</th>
-                    <th>Entrée</th>
-                    <th>Début pause</th>
-                    <th>Fin pause</th>
-                    <th>Sortie</th>
-                    <th>Total</th>
+                    <td>{{ pointage.utilisateur ? pointage.utilisateur.username : 'Inconnu' }}</td>
+                    <td>{{ pointage.datePointage ? pointage.datePointage|date('d/m/Y') : 'N/A' }}</td>
+                    <td>{{ pointage.heureEntree ? pointage.heureEntree|date('H:i') : '-' }}</td>
+                    <td>{{ pointage.heureDebutPause ? pointage.heureDebutPause|date('H:i') : '-' }}</td>
+                    <td>{{ pointage.heureFinPause ? pointage.heureFinPause|date('H:i') : '-' }}</td>
+                    <td>{{ pointage.heureSortie ? pointage.heureSortie|date('H:i') : '-' }}</td>
+                    <td class="total">{{ pointage.totalTravailFormatted ?? 'N/A' }}</td>
                 </tr>
-            </thead>
-            <tbody>
-                {% for pointage in pointages %}
+            {% else %}
+                <tr>
+                    <td colspan="7" class="empty">Aucun pointage trouvé</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {# RÉCAPITULATIF PAR UTILISATEUR #}
+    <h2 class="recap-title">Récapitulatif par utilisateur</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Utilisateur</th>
+                <th>Période</th>
+                <th>Jours travaillés</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if recapParUtilisateur|length > 0 %}
+                {% for row in recapParUtilisateur %}
                     <tr>
-                        <td>{{ pointage.utilisateur ? pointage.utilisateur.username : 'Inconnu' }}</td>
-                        <td>{{ pointage.datePointage ? pointage.datePointage|date('d/m/Y') : 'N/A' }}</td>
-                        <td>{{ pointage.heureEntree ? pointage.heureEntree|date('H:i') : '-' }}</td>
-                        <td>{{ pointage.heureDebutPause ? pointage.heureDebutPause|date('H:i') : '-' }}</td>
-                        <td>{{ pointage.heureFinPause ? pointage.heureFinPause|date('H:i') : '-' }}</td>
-                        <td>{{ pointage.heureSortie ? pointage.heureSortie|date('H:i') : '-' }}</td>
-                        <td class="total">{{ pointage.totalTravailFormatted ?? 'N/A' }}</td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="7" class="empty">Aucun pointage trouvé</td>
+                        <td>{{ row.user.username }}</td>
+                        <td>
+                            {% if period == 'global' %}
+                                Toute la période
+                            {% elseif period == 'day' %}
+                                {{ dateStart|date('d/m/Y') }}
+                            {% else %}
+                                du {{ dateStart|date('d/m/Y') }} au {{ dateEnd|date('d/m/Y') }}
+                            {% endif %}
+                        </td>
+                        <td>{{ row.joursTravailles }}</td>
+                        <td class="total">{{ row.totalFormatted }}</td>
                     </tr>
                 {% endfor %}
-            </tbody>
-        </table>
-
-        <h2 class="recap-title">Récapitulatif par utilisateur</h2>
-        <table>
-            <thead>
+            {% else %}
                 <tr>
-                    <th>Utilisateur</th>
-                    <th>Période</th>
-                    <th>Jours travaillés</th>  <!-- ✅ NOUVEAU -->
-                    <th>Total</th>
+                    <td colspan="4" class="empty">Aucun pointage sur la période sélectionnée</td>
                 </tr>
-            </thead>
-            <tbody>
-                {% if recapParUtilisateur|length > 0 %}
-                    {% for row in recapParUtilisateur %}
-                        <tr>
-                            <td>{{ row.user.username }}</td>
-                            <td>
-                                {% if period == 'global' %}
-                                    Toute la période
-                                {% elseif period == 'day' %}
-                                    {{ dateStart|date('d/m/Y') }}
-                                {% else %}
-                                    du {{ dateStart|date('d/m/Y') }} au {{ dateEnd|date('d/m/Y') }}
-                                {% endif %}
-                            </td>
-                            <td>{{ row.joursTravailles }}</td>
-                            <td class="total">{{ row.totalFormatted }}</td>
-                        </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="4" class="empty">Aucun pointage sur la période sélectionnée</td>  <!-- 3→4 -->
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </body>
-</html>
+            {% endif %}
+        </tbody>
+    </table>
+{% endblock %}

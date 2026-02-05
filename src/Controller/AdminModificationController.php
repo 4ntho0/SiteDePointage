@@ -11,11 +11,15 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class AdminModificationController extends AbstractController {
-
+class AdminModificationController extends AbstractController
+{
     #[Route('/admin/modifications', name: 'admin.modifications')]
     // src/Controller/AdminModificationController.php
-    public function index(ModificationRepository $repo, Request $request): Response {
+    public function index(ModificationRepository $repo, Request $request): Response
+    {
+        if (!$this->getUser()) {
+            return $this->redirectToRoute('app_login');
+        }
         $typeFilter = $request->query->get('type', 'all');
         $actionFilter = $request->query->get('action', 'all');
 

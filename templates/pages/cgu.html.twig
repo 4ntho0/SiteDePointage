@@ -1,0 +1,89 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background:#ffffff ;
+        }
+    </style>
+    <section class="container mt-2">
+        <div class="d-flex justify-content-end align-items-center mb-4 gap-2">
+            <a href="{{ path('accueil') }}" class="btn btn-outline-secondary btn-sm">
+                Retour
+            </a>
+            <a href="{{ path('app_logout') }}" class="btn btn-outline-danger btn-sm">
+                Déconnexion
+            </a>
+        </div>
+        <h3>Conditions Générales d'Utilisation - Système de Pointage</h3>
+        <p>Conformément aux dispositions des Articles 6-III et 19 de la Loi n°2004-575 du 21 juin 2004 pour la Confiance dans l'économie numérique, il est porté à la connaissance des utilisateurs du système de pointage les présentes conditions générales d'utilisation.</p>
+
+        <h4>Article 1 - Informations légales</h4>
+        <div class="bd-example">
+            <details>
+                <summary>A. Éditeur du système (ci-après "<em>l'Éditeur</em>")</summary>
+                <address>
+                    <strong>[Votre Société]</strong>
+                    <br>[Votre Adresse]
+                    <br>[Code Postal Ville]
+                    <br>Téléphone : [Votre téléphone]
+                    <br>Courriel : [contact@votre-societe.fr](mailto:contact@votre-societe.fr)
+                    <br>SIRET : [Votre SIRET]
+                </address>
+            </details>
+            <details>
+                <summary>B. Hébergeur du système (ci-après "<em>l'Hébergeur</em>")</summary>
+                <address>
+                    <strong>[Votre Hébergeur - ex: OVH, AWS, etc.]</strong>
+                    <br>[Adresse hébergeur]
+                    <br>Téléphone : [Contact hébergeur]
+                    <br>Courriel : [support@hebergeur.com](mailto:support@hebergeur.com)
+                </address>
+            </details>
+            <details>
+                <summary>C. Utilisateurs (ci-après "<em>les Utilisateurs</em>")</summary>
+                <p>Sont considérés comme utilisateurs tous les salariés et administrateurs enregistrés dans le système de pointage du temps de travail.</p>
+            </details>
+        </div>
+
+        <h4 class="mt-3">Article 2 - Objet du système</h4>
+        <p>Le système de pointage permet aux utilisateurs d'enregistrer leurs horaires d'entrée, sortie, pause et de générer des rapports de présence pour le suivi du temps de travail.</p>
+
+        <h4 class="mt-3">Article 3 - Obligations des utilisateurs</h4>
+        <ul>
+            <li>Pointer fidèlement leurs horaires réels de travail</li>
+            <li>Ne pas partager leurs identifiants d'accès</li>
+            <li>Utiliser le système uniquement à des fins professionnelles</li>
+            <li>Signaler tout dysfonctionnement immédiatement</li>
+        </ul>
+
+        <h4 class="mt-3">Article 4 - Confidentialité et protection des données</h4>
+        <div class="bd-example">
+            <p>Les données de pointage sont traitées conformément au RGPD (Règlement Général sur la Protection des Données).</p>
+            <ul>
+                <li>Responsable du traitement : [Votre Société]</li>
+                <li>Finalité : Suivi du temps de travail et paie</li>
+                <li>Durée de conservation : 5 ans (conformément au Code du Travail)</li>
+                <li>Droits : Accès, rectification, suppression via contact@entreprise.fr</li>
+            </ul>
+        </div>
+
+        <h4 class="mt-3">Article 5 - Accessibilité</h4>
+        <p>Le système est accessible 24/24h 7/7j, sauf interruptions pour maintenance programmée ou force majeure. En cas d'indisponibilité, l'employeur mettra en place une solution alternative de pointage manuel.</p>
+
+        <h4 class="mt-3">Article 6 - Responsabilité</h4>
+        <p>L'Éditeur ne saurait être tenu responsable des dommages résultant d'une mauvaise utilisation du système par les utilisateurs ou d'une indisponibilité temporaire.</p>
+
+        <h4 class="mt-3">Article 7 - Loi applicable</h4>
+        <p>Les présentes CGU sont régies par la loi française. Tout litige sera soumis aux tribunaux compétents du siège social de l'entreprise.</p>
+
+        <h4 class="mt-3">Article 8 - Contact</h4>
+        <p>Pour toute question relative au système de pointage, contacter [contact-rh@votre-societe.fr](mailto:contact-rh@votre-societe.fr)</p>
+
+        <p class="mt-4"><em>Dernière mise à jour : {{ 'now'|date('d/m/Y') }}</em></p>
+    </section>
+
+{% endblock %}
+{% block footer %}{% endblock %}

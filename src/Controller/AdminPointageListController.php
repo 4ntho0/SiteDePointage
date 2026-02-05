@@ -22,6 +22,9 @@ class AdminPointageListController extends AbstractController
     #[Route('/admin/pointages', name: 'admin.pointage', methods: ['GET'])]
     public function index(Request $request): Response
     {
+        if (!$this->getUser()) {
+            return $this->redirectToRoute('app_login');
+        }
         $sortField = $request->query->get('sort', self::CHAMP_DATE_POINTAGE);
         $sortOrder = $request->query->get('order', 'DESC');
         $userFilter = $request->query->get('user');
@@ -31,7 +34,11 @@ class AdminPointageListController extends AbstractController
         [$dateStart, $dateEnd, $period] = $this->getDateRangeFromRequest($request);
 
         $pointages = $this->repository->findAllOrderByFieldWithLimit(
-            $sortField, $sortOrder, $userFilter, $dateStart, $dateEnd
+            $sortField,
+            $sortOrder,
+            $userFilter,
+            $dateStart,
+            $dateEnd
         );
 
         $recapParUtilisateur = $this->repository->getRecapParUtilisateur($dateStart, $dateEnd, $userFilter);
@@ -39,20 +46,20 @@ class AdminPointageListController extends AbstractController
         $users = $this->repository->getAllUsernames();
 
         return $this->render('admin/admin.pointages.html.twig', [
-            'pointages' => $pointages,
-            'users' => $users,
-            'sortField' => $sortField,
-            'sortOrder' => $sortOrder,
-            'userFilter' => $userFilter,
-            'userFilters' => $userFilters,
-            'page' => $page,
-            'totalPointages' => $totalPointages,
-            'period' => $period,
-            'dateStart' => $dateStart,
-            'dateEnd' => $dateEnd,
-            'dateStartInput' => $request->query->get('date_start'),
-            'dateEndInput' => $request->query->get('date_end'),
-            'recapParUtilisateur' => $recapParUtilisateur,
+                    'pointages' => $pointages,
+                    'users' => $users,
+                    'sortField' => $sortField,
+                    'sortOrder' => $sortOrder,
+                    'userFilter' => $userFilter,
+                    'userFilters' => $userFilters,
+                    'page' => $page,
+                    'totalPointages' => $totalPointages,
+                    'period' => $period,
+                    'dateStart' => $dateStart,
+                    'dateEnd' => $dateEnd,
+                    'dateStartInput' => $request->query->get('date_start'),
+                    'dateEndInput' => $request->query->get('date_end'),
+                    'recapParUtilisateur' => $recapParUtilisateur,
         ]);
     }
 

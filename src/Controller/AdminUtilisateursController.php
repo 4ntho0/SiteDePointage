@@ -15,8 +15,8 @@ use App\Repository\UserRepository;
 use App\Entity\User;
 use App\Entity\Modification;
 
-class AdminUtilisateursController extends AbstractController {
-
+class AdminUtilisateursController extends AbstractController
+{
     private const ROLES_AUTORISES = ['ROLE_USER', 'ROLE_ADMIN'];
     private const TYPE_USER = 'user';
     private const ROUTE_ADMIN_UTILISATEURS = 'admin.utilisateurs';
@@ -45,7 +45,11 @@ class AdminUtilisateursController extends AbstractController {
     private const CSRF_CONTEXT_TOGGLE_USER = 'toggle_user_';
 
     #[Route('/admin/utilisateurs', name: 'admin.utilisateurs')]
-    public function index(UserRepository $userRepository, Request $request): Response {
+    public function index(UserRepository $userRepository, Request $request): Response
+    {
+        if (!$this->getUser()) {
+            return $this->redirectToRoute('app_login');
+        }
         $filterStatus = $request->query->get('status', 'active');
 
         if ($filterStatus === 'active') {
@@ -64,9 +68,9 @@ class AdminUtilisateursController extends AbstractController {
 
     #[Route('/admin/utilisateurs/add', name: 'admin.utilisateurs.add', methods: ['POST'])]
     public function add(
-            Request $request,
-            EntityManagerInterface $em,
-            UserPasswordHasherInterface $passwordHasher
+        Request $request,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $passwordHasher
     ): RedirectResponse {
         $donnees = $this->validerCreationUtilisateur($request, $em);
 
@@ -83,7 +87,8 @@ class AdminUtilisateursController extends AbstractController {
         return $this->redirectToRoute(self::ROUTE_ADMIN_UTILISATEURS);
     }
 
-    private function validerCreationUtilisateur(Request $request, EntityManagerInterface $em): ?array {
+    private function validerCreationUtilisateur(Request $request, EntityManagerInterface $em): ?array
+    {
         $donnees = $this->extraireDonneesFormulaire($request);
 
         $erreurs = $this->validerDonneesCreation($donnees);
@@ -101,7 +106,8 @@ class AdminUtilisateursController extends AbstractController {
         return $donnees;
     }
 
-    private function extraireDonneesFormulaire(Request $request): array {
+    private function extraireDonneesFormulaire(Request $request): array
+    {
         $nom = trim($request->request->get('nom', ''));
         $prenom = trim($request->request->get('prenom', ''));
 
@@ -118,7 +124,8 @@ class AdminUtilisateursController extends AbstractController {
         ];
     }
 
-    private function validerDonneesCreation(array $donnees): array {
+    private function validerDonneesCreation(array $donnees): array
+    {
         $erreurs = [];
 
         if (!in_array($donnees['role'], self::ROLES_AUTORISES, true)) {
@@ -136,7 +143,8 @@ class AdminUtilisateursController extends AbstractController {
         return $erreurs;
     }
 
-    private function utilisateurExistant(EntityManagerInterface $em, string $username): bool {
+    private function utilisateurExistant(EntityManagerInterface $em, string $username): bool
+    {
         $existingUser = $em->getRepository(User::class)
                 ->findOneBy([self::CLE_LOG_USERNAME => $username]);
 
@@ -148,7 +156,8 @@ class AdminUtilisateursController extends AbstractController {
         return true;
     }
 
-    private function creerUtilisateur(array $donnees, UserPasswordHasherInterface $passwordHasher): User {
+    private function creerUtilisateur(array $donnees, UserPasswordHasherInterface $passwordHasher): User
+    {
         $user = new User();
         $user->setUsername($donnees['username']);
         $user->setNom($donnees['nom']);
@@ -159,7 +168,8 @@ class AdminUtilisateursController extends AbstractController {
         return $user;
     }
 
-    private function loggerCreation(EntityManagerInterface $em, User $user): void {
+    private function loggerCreation(EntityManagerInterface $em, User $user): void
+    {
         $log = new Modification();
         $log->setDate(new \DateTime());
         $log->setType(self::TYPE_USER);
@@ -180,10 +190,10 @@ class AdminUtilisateursController extends AbstractController {
 
     #[Route('/admin/utilisateurs/delete', name: 'admin.utilisateurs.delete', methods: ['POST'])]
     public function deleteUser(
-            Request $request,
-            EntityManagerInterface $em,
-            UserPasswordHasherInterface $passwordHasher,
-            Security $security
+        Request $request,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $passwordHasher,
+        Security $security
     ): JsonResponse {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
@@ -197,10 +207,10 @@ class AdminUtilisateursController extends AbstractController {
     }
 
     private function validerSuppressionUtilisateur(
-            Request $request,
-            EntityManagerInterface $em,
-            Security $security,
-            UserPasswordHasherInterface $passwordHasher
+        Request $request,
+        EntityManagerInterface $em,
+        Security $security,
+        UserPasswordHasherInterface $passwordHasher
     ): array|false {
         $data = json_decode($request->getContent(), true);
         $userId = $data[self::JSON_CLE_USER_ID] ?? null;
@@ -239,7 +249,8 @@ class AdminUtilisateursController extends AbstractController {
         return ['user' => $user];
     }
 
-    private function effectuerSuppression(EntityManagerInterface $em, User $user): void {
+    private function effectuerSuppression(EntityManagerInterface $em, User $user): void
+    {
         $oldData = [
             self::CLE_LOG_USERNAME => $user->getUsername(),
             self::CLE_LOG_NOM => $user->getNom(),
@@ -263,10 +274,10 @@ class AdminUtilisateursController extends AbstractController {
 
     #[Route('/admin/utilisateurs/toggle/{id}', name: 'admin.utilisateurs.toggle', methods: ['POST'])]
     public function toggle(
-            User $user,
-            EntityManagerInterface $em,
-            Request $request,
-            Security $security
+        User $user,
+        EntityManagerInterface $em,
+        Request $request,
+        Security $security
     ): RedirectResponse {
         if (!$this->validerToggleUtilisateur($user, $request, $security)) {
             return $this->redirectToRoute(self::ROUTE_ADMIN_UTILISATEURS);
@@ -276,7 +287,8 @@ class AdminUtilisateursController extends AbstractController {
         return $this->redirectToRoute(self::ROUTE_ADMIN_UTILISATEURS);
     }
 
-    private function validerToggleUtilisateur(User $user, Request $request, Security $security): bool {
+    private function validerToggleUtilisateur(User $user, Request $request, Security $security): bool
+    {
         $submittedToken = $request->request->get(self::JSON_CLE_TOKEN);
 
         if (!$this->isCsrfTokenValid(self::CSRF_CONTEXT_TOGGLE_USER . $user->getId(), $submittedToken)) {
@@ -293,7 +305,8 @@ class AdminUtilisateursController extends AbstractController {
         return true;
     }
 
-    private function effectuerToggle(EntityManagerInterface $em, User $user): void {
+    private function effectuerToggle(EntityManagerInterface $em, User $user): void
+    {
         $oldStatus = $user->isActive();
         $action = $oldStatus ? self::ACTION_USER_DESACTIVE : self::ACTION_USER_ACTIVE;
 
@@ -319,13 +332,15 @@ class AdminUtilisateursController extends AbstractController {
 
     #[Route('/admin/utilisateurs/password', name: 'admin.utilisateurs.password', methods: ['POST'])]
     public function changePassword(
-            Request $request,
-            UserRepository $userRepository,
-            EntityManagerInterface $em,
-            UserPasswordHasherInterface $passwordHasher
+        Request $request,
+        UserRepository $userRepository,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $passwordHasher
     ): RedirectResponse {
-        if (!$this->isCsrfTokenValid(self::CSRF_CONTEXT_CHANGE_PASSWORD,
-                        $request->request->get(self::JSON_CLE_TOKEN))) {
+        if (!$this->isCsrfTokenValid(
+            self::CSRF_CONTEXT_CHANGE_PASSWORD,
+            $request->request->get(self::JSON_CLE_TOKEN)
+        )) {
             $this->addFlash('error', self::MSG_CSRF_INVALIDE);
             return $this->redirectToRoute(self::ROUTE_ADMIN_UTILISATEURS);
         }
@@ -353,7 +368,8 @@ class AdminUtilisateursController extends AbstractController {
         return $this->redirectToRoute(self::ROUTE_ADMIN_UTILISATEURS);
     }
 
-    private function validerChangementMotDePasse(Request $request, UserRepository $userRepository): ?array {
+    private function validerChangementMotDePasse(Request $request, UserRepository $userRepository): ?array
+    {
         $userId = $request->request->get(self::JSON_CLE_USER_ID);
         $password = $request->request->get('password');
         $passwordConfirm = $request->request->get('password_confirm');
@@ -372,7 +388,8 @@ class AdminUtilisateursController extends AbstractController {
         return ['userId' => $userId, 'password' => $password];
     }
 
-    private function loggerChangementMotDePasse(EntityManagerInterface $em, User $user, array $oldData): void {
+    private function loggerChangementMotDePasse(EntityManagerInterface $em, User $user, array $oldData): void
+    {
         $log = new Modification();
         $log->setDate(new \DateTime());
         $log->setType(self::TYPE_USER);
@@ -392,7 +409,8 @@ class AdminUtilisateursController extends AbstractController {
         $em->flush();
     }
 
-    private function jsonError(string $message): JsonResponse {
+    private function jsonError(string $message): JsonResponse
+    {
         return $this->json([
                     self::JSON_REPONSE_SUCCESS => false,
                     self::JSON_REPONSE_MESSAGE => $message

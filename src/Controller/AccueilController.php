@@ -11,10 +11,15 @@ use Symfony\Component\Routing\Annotation\Route;
 use DateTime;
 use DateTimeZone;
 
-class AccueilController extends AbstractController {
-
+class AccueilController extends AbstractController
+{
     #[Route('/', name: 'accueil')]
-    public function index(Request $request, EntityManagerInterface $em): Response {
+    public function index(Request $request, EntityManagerInterface $em): Response
+    {
+        if (!$this->getUser()) {
+            return $this->redirectToRoute('app_login');
+        }
+
         $tz = new DateTimeZone('Europe/Paris');
         $now = new DateTime('now', $tz);
 
@@ -29,7 +34,8 @@ class AccueilController extends AbstractController {
         return $this->render('pages/accueil.html.twig', $this->prepareTemplateData($entreeEnCours));
     }
 
-    private function handlePointagePost(Request $request, EntityManagerInterface $em, DateTime $now): Response {
+    private function handlePointagePost(Request $request, EntityManagerInterface $em, DateTime $now): Response
+    {
         // Validation géolocalisation
         if (!$this->isGeolocalisationValide($request)) {
             return $this->redirectToRoute('accueil');
@@ -46,41 +52,45 @@ class AccueilController extends AbstractController {
 
         // Traitement selon type
         $this->traiterActionPointage(
-                $request->request->get('type'),
-                $entreeEnCours,
-                $now,
-                $request->request->get('latitude'),
-                $request->request->get('longitude'),
-                $em
+            $request->request->get('type'),
+            $entreeEnCours,
+            $now,
+            $request->request->get('latitude'),
+            $request->request->get('longitude'),
+            $em
         );
 
         $em->flush();
         return $this->redirectToRoute('accueil');
     }
 
-    private function isGeolocalisationValide(Request $request): bool {
+    private function isGeolocalisationValide(Request $request): bool
+    {
         return $request->request->has('latitude') && $request->request->has('longitude');
     }
 
-    private function isDansRayonAutorise(Request $request): bool {
+    private function isDansRayonAutorise(Request $request): bool
+    {
         $latitude = (float) $request->request->get('latitude');
         $longitude = (float) $request->request->get('longitude');
 
         $distance = $this->calculerDistance(
-                $latitude, $longitude,
-                46.8034232, 1.6719998  // Coordonnées fixes
+            $latitude,
+            $longitude,
+            46.8034232,
+            1.6719998  // Coordonnées fixes
         );
 
         return $distance <= 500; // Rayon autorisé
     }
 
     private function traiterActionPointage(
-            string $type,
-            ?Pointage $entreeEnCours,
-            DateTime $now,
-            string $latitude,
-            string $longitude,
-            EntityManagerInterface $em
+        string $type,
+        ?Pointage $entreeEnCours,
+        DateTime $now,
+        string $latitude,
+        string $longitude,
+        EntityManagerInterface $em
     ): void {
         match ($type) {
             'entrée' => $this->actionEntree($em, $now, $latitude, $longitude),
@@ -90,7 +100,8 @@ class AccueilController extends AbstractController {
         };
     }
 
-    private function getPointageEnCours(EntityManagerInterface $em, DateTimeZone $tz): ?Pointage {
+    private function getPointageEnCours(EntityManagerInterface $em, DateTimeZone $tz): ?Pointage
+    {
         $user = $this->getUser();
         $today = new DateTime('today', $tz);
 
@@ -107,7 +118,8 @@ class AccueilController extends AbstractController {
                         ->getOneOrNullResult();
     }
 
-    private function prepareTemplateData(?Pointage $entreeEnCours): array {
+    private function prepareTemplateData(?Pointage $entreeEnCours): array
+    {
         $hasEntree = $entreeEnCours !== null;
         $enPause = $hasEntree &&
                 $entreeEnCours->getHeureDebutPause() &&
@@ -119,13 +131,18 @@ class AccueilController extends AbstractController {
             'entreeEnCours' => $entreeEnCours,
             'user' => $this->getUser(),
             'hasEntree' => $hasEntree,
-            'heureEntree' => $entreeEnCours?->getHeureEntree() ? $entreeEnCours->getHeureEntree()->format('H:i:s') : null,
+            'heureEntree' =>
+                    $entreeEnCours?->
+                    getHeureEntree() ? $entreeEnCours->
+                    getHeureEntree()->
+                    format('H:i:s') : null,
             'enPause' => $enPause,
             'pauseTerminee' => $pauseTerminee,
         ];
     }
 
-    private function calculerDistance(float $lat1, float $long1, float $lat2, float $long2): float {
+    private function calculerDistance(float $lat1, float $long1, float $lat2, float $long2): float
+    {
         $earthRadius = 6371000; // Rayon Terre (mètres)
 
         $lat1Rad = deg2rad($lat1);
@@ -144,7 +161,12 @@ class AccueilController extends AbstractController {
         return $earthRadius * $c;
     }
 
-    private function actionEntree(EntityManagerInterface $em, DateTime $now, string $latitude, string $longitude): void {
+    private function actionEntree(
+        EntityManagerInterface $em,
+        DateTime $now,
+        string $latitude,
+        string $longitude
+    ): void {
         $pointage = new Pointage();
         $pointage->setDatePointage($now);
         $pointage->setHeureEntree($now);
@@ -155,19 +177,22 @@ class AccueilController extends AbstractController {
         $em->persist($pointage);
     }
 
-    private function actionPause(?Pointage $entreeEnCours, DateTime $now): void {
+    private function actionPause(?Pointage $entreeEnCours, DateTime $now): void
+    {
         if ($entreeEnCours) {
             $entreeEnCours->setHeureDebutPause($now);
         }
     }
 
-    private function actionReprise(?Pointage $entreeEnCours, DateTime $now): void {
+    private function actionReprise(?Pointage $entreeEnCours, DateTime $now): void
+    {
         if ($entreeEnCours) {
             $entreeEnCours->setHeureFinPause($now);
         }
     }
 
-    private function actionSortie(?Pointage $entreeEnCours, DateTime $now, string $latitude, string $longitude): void {
+    private function actionSortie(?Pointage $entreeEnCours, DateTime $now, string $latitude, string $longitude): void
+    {
         if ($entreeEnCours) {
             $entreeEnCours->setHeureSortie($now);
             $entreeEnCours->setLatitudeSortie($latitude);

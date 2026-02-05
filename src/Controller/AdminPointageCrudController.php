@@ -11,8 +11,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class AdminPointageCrudController extends AbstractController {
-
+class AdminPointageCrudController extends AbstractController
+{
     private const TYPE_POINTAGE = 'pointage';
     private const ACTION_SUPPRESSION = 'SUPPRESSION_POINTAGE';
     private const ACTION_MODIFICATION = 'MODIFICATION_POINTAGE';
@@ -22,26 +22,29 @@ class AdminPointageCrudController extends AbstractController {
 
     private PointageRepository $repository;
 
-    public function __construct(PointageRepository $repository) {
+    public function __construct(PointageRepository $repository)
+    {
         $this->repository = $repository;
     }
 
     #[Route('/admin/pointages/suppr/{id}', name: 'admin.pointage.suppr', methods: ['GET'])]
-    public function suppr(int $id, PointageRepository $repository, EntityManagerInterface $em): Response {
+    public function suppr(int $id, PointageRepository $repository, EntityManagerInterface $em): Response
+    {
         $pointage = $repository->find($id);
         if (!$pointage) {
             return $this->redirectToRoute(self::ROUTE_ADMIN_POINTAGE);
         }
 
-        $this->loggerSuppression($em, $pointage);
-        $repository->remove($pointage);
-        $em->flush();
+        $this->loggerSuppression($em, $pointage);  // Crée le log
+        $repository->remove($pointage);            // Supprime Pointage
+        $em->flush();                              // OK : les 2 opérations sont flushées
 
         return $this->redirectToRoute(self::ROUTE_ADMIN_POINTAGE);
     }
 
     #[Route('/admin/pointages/edit', name: 'admin.pointage.edit', methods: ['POST'])]
-    public function edit(Request $request, EntityManagerInterface $em): Response {
+    public function edit(Request $request, EntityManagerInterface $em): Response
+    {
         $pointage = $this->repository->find($request->request->get('id'));
         if (!$pointage) {
             return $this->redirectToRoute(self::ROUTE_ADMIN_POINTAGE);
@@ -53,13 +56,18 @@ class AdminPointageCrudController extends AbstractController {
         }
 
         $this->mettreAJourPointage($pointage, $request);
-        $em->flush();
+
+        // Créer le log AVANT flush
         $this->loggerModification($em, $pointage, $oldData);
+
+        // UN SEUL flush à la fin pour tout enregistrer
+        $em->flush();
 
         return $this->redirectToRoute(self::ROUTE_ADMIN_POINTAGE);
     }
 
-    private function serializePointage(Pointage $p): array {
+    private function serializePointage(Pointage $p): array
+    {
         return [
             'date' => $p->getDatePointage()?->format(self::FORMAT_DATE_JOUR),
             'entree' => $p->getHeureEntree()?->format(self::FORMAT_HEURE_MINUTES),
@@ -71,7 +79,8 @@ class AdminPointageCrudController extends AbstractController {
         ];
     }
 
-    private function isFormulaireValide(Request $request): bool {
+    private function isFormulaireValide(Request $request): bool
+    {
         $donnees = $this->extraireDonneesFormulaire($request);
         if (($donnees['debut'] && !$donnees['fin']) || (!$donnees['debut'] && $donnees['fin'])) {
             return false;
@@ -79,7 +88,8 @@ class AdminPointageCrudController extends AbstractController {
         return !$this->aDesIncoherencesHoraires($donnees);
     }
 
-    private function extraireDonneesFormulaire(Request $request): array {
+    private function extraireDonneesFormulaire(Request $request): array
+    {
         return [
             'date' => $request->request->get('datePointage'),
             'entree' => $request->request->get('heureEntree'),
@@ -89,7 +99,8 @@ class AdminPointageCrudController extends AbstractController {
         ];
     }
 
-    private function aDesIncoherencesHoraires(array $donnees): bool {
+    private function aDesIncoherencesHoraires(array $donnees): bool
+    {
         $dates = $this->convertirEnDateTime($donnees);
         return $dates['entree'] && $dates['debut'] && $dates['entree'] > $dates['debut'] ||
                 $dates['debut'] && $dates['fin'] && $dates['debut'] > $dates['fin'] ||
@@ -97,7 +108,8 @@ class AdminPointageCrudController extends AbstractController {
                 $dates['entree'] && $dates['sortie'] && $dates['entree'] > $dates['sortie'];
     }
 
-    private function convertirEnDateTime(array $donnees): array {
+    private function convertirEnDateTime(array $donnees): array
+    {
         return [
             'entree' => $donnees['entree'] ? new \DateTime($donnees['entree']) : null,
             'debut' => $donnees['debut'] ? new \DateTime($donnees['debut']) : null,
@@ -106,9 +118,9 @@ class AdminPointageCrudController extends AbstractController {
         ];
     }
 
-    private function mettreAJourPointage(Pointage $pointage, Request $request): void {
-        $pointage->setDatePointage(new \DateTime($request->request->
-                get('datePointage')));
+    private function mettreAJourPointage(Pointage $pointage, Request $request): void
+    {
+        $pointage->setDatePointage(new \DateTime($request->request->get('datePointage')));
         $pointage->setHeureEntree($request->request->
                 get('heureEntree') ? new \DateTime($request->request->
                         get('heureEntree')) : null);
@@ -123,8 +135,10 @@ class AdminPointageCrudController extends AbstractController {
                         get('heureSortie')) : null);
     }
 
-    private function loggerModification(EntityManagerInterface $em, Pointage $pointage, array $oldData): void {
+    private function loggerModification(EntityManagerInterface $em, Pointage $pointage, array $oldData): void
+    {
         $newData = $this->serializePointage($pointage);
+
         $log = new Modification();
         $log->setDate(new \DateTime());
         $log->setType(self::TYPE_POINTAGE);
@@ -133,10 +147,10 @@ class AdminPointageCrudController extends AbstractController {
         $log->setAnciennesDonnees($oldData);
         $log->setNouvellesDonnees($newData);
         $em->persist($log);
-        $em->flush();
     }
 
-    private function loggerSuppression(EntityManagerInterface $em, Pointage $pointage): void {
+    private function loggerSuppression(EntityManagerInterface $em, Pointage $pointage): void
+    {
         $oldData = $this->serializePointage($pointage);
         $log = new Modification();
         $log->setDate(new \DateTime());

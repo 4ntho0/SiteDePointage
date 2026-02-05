@@ -54,7 +54,7 @@
                                     {{ dateStartInput|date('d/m/Y') }} → {{ dateEndInput|date('d/m/Y') }}
                                     <br><small class="text-muted">
                                         <a href="#" onclick="clearDateFilter();
-                                            return false;" class="link-underline link-underline-opacity-0-hover">Effacer</a>
+                                                return false;" class="link-underline link-underline-opacity-0-hover">Effacer</a>
                                     </small>
                                 </div>
                             {% else %}
@@ -244,6 +244,63 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const editModal = document.getElementById('editPointageModal');
+            const form = document.getElementById('editPointageForm');
+            let initialValues = {};
+
+            // Quand la modale s’ouvre → on stocke les valeurs originales
+            editModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+
+                const data = {
+                    id: button.getAttribute('data-id'),
+                    date: button.getAttribute('data-date'),
+                    entree: button.getAttribute('data-entree'),
+                    debut: button.getAttribute('data-debut'),
+                    fin: button.getAttribute('data-fin'),
+                    sortie: button.getAttribute('data-sortie'),
+                };
+
+                document.getElementById('modalPointageId').value = data.id;
+                document.getElementById('modalDate').value = data.date;
+                document.getElementById('modalEntree').value = data.entree;
+                document.getElementById('modalDebutPause').value = data.debut;
+                document.getElementById('modalFinPause').value = data.fin;
+                document.getElementById('modalSortie').value = data.sortie;
+
+                // On clone les données pour comparaison ultérieure
+                initialValues = {...data};
+
+                updateTimeConstraints();
+            });
+
+            // Vérification avant soumission
+            form.addEventListener('submit', function (e) {
+                const currentValues = {
+                    id: document.getElementById('modalPointageId').value,
+                    date: document.getElementById('modalDate').value,
+                    entree: document.getElementById('modalEntree').value,
+                    debut: document.getElementById('modalDebutPause').value,
+                    fin: document.getElementById('modalFinPause').value,
+                    sortie: document.getElementById('modalSortie').value,
+                };
+
+                // Comparer les champs entre état initial et actuel
+                const hasChanged = Object.keys(currentValues).some(
+                        key => currentValues[key] !== initialValues[key]
+                );
+
+                if (!hasChanged) {
+                    alert("Aucune modification détectée.");
+                    e.preventDefault();
+                    return;
+                }
+
+                // Ici, tu laisses tes validations existantes (dates futures, séquences d'heures, etc.)
+            });
+        });
+
         document.addEventListener('DOMContentLoaded', function () {
             const editModal = document.getElementById('editPointageModal');
 

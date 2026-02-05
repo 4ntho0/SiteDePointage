@@ -6,8 +6,8 @@ use App\Entity\Pointage;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-class PointageRepository extends ServiceEntityRepository {
-
+class PointageRepository extends ServiceEntityRepository
+{
     private const FORMAT_DATE_SQL = 'Y-m-d';
     private const CHAMP_DATE_POINTAGE = 'datePointage';
     private const CHAMP_UTILISATEUR = 'utilisateur';
@@ -20,12 +20,17 @@ class PointageRepository extends ServiceEntityRepository {
     private const CONDITION_USER_IN = 'u.username IN (:users)';
     private const CONDITION_USER_EQ = 'u.username = :username';
 
-    public function __construct(ManagerRegistry $registry) {
+    public function __construct(ManagerRegistry $registry)
+    {
         parent::__construct($registry, Pointage::class);
     }
 
-    public function findAllOrderByField
-    (string $champ, string $ordre, ?string $username = null, ?int $limit = null): array {
+    public function findAllOrderByField(
+        string $champ,
+        string $ordre,
+        ?string $username = null,
+        ?int $limit = null
+    ): array {
         $qb = $this->createQueryBuilder('p')
                 ->join('p.utilisateur', 'u');
 
@@ -50,7 +55,8 @@ class PointageRepository extends ServiceEntityRepository {
         return $qb->getQuery()->getResult();
     }
 
-    public function getAllUsernames(): array {
+    public function getAllUsernames(): array
+    {
         return $this->createQueryBuilder('p')
                         ->select('DISTINCT u.username')
                         ->join('p.utilisateur', 'u')
@@ -59,17 +65,18 @@ class PointageRepository extends ServiceEntityRepository {
                         ->getResult();
     }
 
-    public function remove(Pointage $pointage): void {
+    public function remove(Pointage $pointage): void
+    {
         $this->getEntityManager()->remove($pointage);
         $this->getEntityManager()->flush();
     }
 
     public function findAllOrderByFieldWithLimit(
-            string $champ,
-            string $ordre,
-            ?string $userFilter = null,
-            ?\DateTimeInterface $dateStart = null,
-            ?\DateTimeInterface $dateEnd = null
+        string $champ,
+        string $ordre,
+        ?string $userFilter = null,
+        ?\DateTimeInterface $dateStart = null,
+        ?\DateTimeInterface $dateEnd = null
     ): array {
         $qb = $this->createQueryBuilder('p')->join('p.utilisateur', 'u');
 
@@ -102,9 +109,9 @@ class PointageRepository extends ServiceEntityRepository {
     }
 
     public function countFiltered(
-            ?string $userFilter = null,
-            ?\DateTimeInterface $dateStart = null,
-            ?\DateTimeInterface $dateEnd = null
+        ?string $userFilter = null,
+        ?\DateTimeInterface $dateStart = null,
+        ?\DateTimeInterface $dateEnd = null
     ): int {
         $qb = $this->createQueryBuilder('p')
                 ->select('COUNT(p.id)');
@@ -130,9 +137,9 @@ class PointageRepository extends ServiceEntityRepository {
     }
 
     public function getRecapParUtilisateur(
-            ?\DateTimeInterface $dateStart,
-            ?\DateTimeInterface $dateEnd,
-            ?string $userFilter = null
+        ?\DateTimeInterface $dateStart,
+        ?\DateTimeInterface $dateEnd,
+        ?string $userFilter = null
     ): array {
         $qb = $this->createQueryBuilder('p')
                 ->join('p.utilisateur', 'u')
