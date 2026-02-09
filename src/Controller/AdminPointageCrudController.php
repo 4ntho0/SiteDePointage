@@ -10,6 +10,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class AdminPointageCrudController extends AbstractController
 {
@@ -28,16 +31,20 @@ class AdminPointageCrudController extends AbstractController
     }
 
     #[Route('/admin/pointages/suppr/{id}', name: 'admin.pointage.suppr', methods: ['GET'])]
-    public function suppr(int $id, PointageRepository $repository, EntityManagerInterface $em): Response
-    {
+    public function suppr(
+        int $id,
+        PointageRepository $repository,
+        EntityManagerInterface $em,
+        TokenStorageInterface $tokenStorage,
+        SessionInterface $session
+    ): Response {
         $pointage = $repository->find($id);
         if (!$pointage) {
             return $this->redirectToRoute(self::ROUTE_ADMIN_POINTAGE);
         }
-
-        $this->loggerSuppression($em, $pointage);  // Crée le log
-        $repository->remove($pointage);            // Supprime Pointage
-        $em->flush();                              // OK : les 2 opérations sont flushées
+        $this->loggerSuppression($em, $pointage);
+        $repository->remove($pointage);
+        $em->flush();
 
         return $this->redirectToRoute(self::ROUTE_ADMIN_POINTAGE);
     }
@@ -56,11 +63,8 @@ class AdminPointageCrudController extends AbstractController
         }
 
         $this->mettreAJourPointage($pointage, $request);
-
-        // Créer le log AVANT flush
         $this->loggerModification($em, $pointage, $oldData);
 
-        // UN SEUL flush à la fin pour tout enregistrer
         $em->flush();
 
         return $this->redirectToRoute(self::ROUTE_ADMIN_POINTAGE);
@@ -122,17 +126,17 @@ class AdminPointageCrudController extends AbstractController
     {
         $pointage->setDatePointage(new \DateTime($request->request->get('datePointage')));
         $pointage->setHeureEntree($request->request->
-                get('heureEntree') ? new \DateTime($request->request->
-                        get('heureEntree')) : null);
+                        get('heureEntree') ? new \DateTime($request->request->
+                                        get('heureEntree')) : null);
         $pointage->setHeureDebutPause($request->request->
-                get('heureDebutPause') ? new \DateTime($request->request->
-                        get('heureDebutPause')) : null);
+                        get('heureDebutPause') ? new \DateTime($request->request->
+                                        get('heureDebutPause')) : null);
         $pointage->setHeureFinPause($request->request->
-                get('heureFinPause') ? new \DateTime($request->request->
-                        get('heureFinPause')) : null);
+                        get('heureFinPause') ? new \DateTime($request->request->
+                                        get('heureFinPause')) : null);
         $pointage->setHeureSortie($request->request->
-                get('heureSortie') ? new \DateTime($request->request->
-                        get('heureSortie')) : null);
+                        get('heureSortie') ? new \DateTime($request->request->
+                                        get('heureSortie')) : null);
     }
 
     private function loggerModification(EntityManagerInterface $em, Pointage $pointage, array $oldData): void

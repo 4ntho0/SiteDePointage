@@ -1,7 +1,5 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Pointage{% endblock %}
-
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" href="{{ asset('css/pointage.css') }}">
@@ -58,10 +56,14 @@
             </p>
 
             <hr>
-
-            <a href="{{ path('app_logout') }}" class="logout-link">
-                Déconnexion
-            </a>
+            <div class="d-flex gap-2 justify-content-center">
+                <a href="{{ path('app_logout') }}" class="logout-link">
+                    Déconnexion
+                </a>
+                <a href="{{ path('app_cgu') }}" class="logout-link">
+                    CGU
+                </a>
+            </div>
         </div>
     </div>
 
@@ -147,8 +149,8 @@
             // GÉOLOCALISATION
             let userLocation = null;
 
-            const BUREAU_LAT = 46.8034232;
-            const BUREAU_LNG = 1.6719998;
+            const BUREAU_LAT = 46.8210677;
+            const BUREAU_LNG = 1.674782;
             const MAX_DISTANCE = 0.5; // 500 m en km
 
             function getDistance(lat1, lng1, lat2, lng2) {

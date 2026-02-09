@@ -46,7 +46,7 @@ class AccueilController extends AbstractController
             return $this->redirectToRoute('accueil');
         }
 
-        // ✅ Récupérer pointage en cours
+        // Récupérer pointage en cours
         $tz = new DateTimeZone('Europe/Paris');
         $entreeEnCours = $this->getPointageEnCours($em, $tz);
 
@@ -77,8 +77,8 @@ class AccueilController extends AbstractController
         $distance = $this->calculerDistance(
             $latitude,
             $longitude,
-            46.8034232,
-            1.6719998  // Coordonnées fixes
+            46.8210677,
+            1.674782
         );
 
         return $distance <= 500; // Rayon autorisé
@@ -110,7 +110,7 @@ class AccueilController extends AbstractController
                         ->from(Pointage::class, 'p')
                         ->where('p.utilisateur = :user')
                         ->andWhere('p.datePointage = :today')
-                        ->andWhere('p.heureSortie IS NULL')  // ✅ CLÉ : ignore les pointages terminés
+                        ->andWhere('p.heureSortie IS NULL')
                         ->setParameter('user', $user)
                         ->setParameter('today', $today)
                         ->setMaxResults(1)

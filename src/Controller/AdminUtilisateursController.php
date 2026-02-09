@@ -115,7 +115,7 @@ class AdminUtilisateursController extends AbstractController
         $username = strtolower($nom . ' ' . $prenom);
 
         return [
-            'username' => $username, // ← AJOUTÉ
+            'username' => $username,
             'nom' => $nom,
             'prenom' => $prenom,
             'plainPassword' => $request->request->get('password'),
@@ -149,7 +149,6 @@ class AdminUtilisateursController extends AbstractController
                 ->findOneBy([self::CLE_LOG_USERNAME => $username]);
 
         if ($existingUser) {
-            $this->addFlash('error', "Un utilisateur avec le nom '$username' existe déjà.");
             return false;
         }
 
@@ -283,7 +282,18 @@ class AdminUtilisateursController extends AbstractController
             return $this->redirectToRoute(self::ROUTE_ADMIN_UTILISATEURS);
         }
 
+        $currentUser = $this->getUser();
+        if ($currentUser && $currentUser->getId() === $user->getId()) {
+            $this->get('security.token_storage')->setToken(null);
+            $this->get('session')->invalidate();
+            $this->effectuerToggle($em, $user);
+            $em->flush();
+            return $this->redirectToRoute('app_login');
+        }
+
         $this->effectuerToggle($em, $user);
+        $em->flush();
+
         return $this->redirectToRoute(self::ROUTE_ADMIN_UTILISATEURS);
     }
 
@@ -292,16 +302,13 @@ class AdminUtilisateursController extends AbstractController
         $submittedToken = $request->request->get(self::JSON_CLE_TOKEN);
 
         if (!$this->isCsrfTokenValid(self::CSRF_CONTEXT_TOGGLE_USER . $user->getId(), $submittedToken)) {
-            $this->addFlash('error', self::MSG_CSRF_INVALIDE);
             return false;
         }
 
         $currentUser = $security->getUser();
         if ($user->getId() === $currentUser->getId()) {
-            $this->addFlash('error', 'Vous ne pouvez pas désactiver votre propre compte.');
             return false;
         }
-
         return true;
     }
 
@@ -310,10 +317,18 @@ class AdminUtilisateursController extends AbstractController
         $oldStatus = $user->isActive();
         $action = $oldStatus ? self::ACTION_USER_DESACTIVE : self::ACTION_USER_ACTIVE;
 
-        $oldData = [self::CLE_LOG_IS_ACTIVE => $oldStatus];
+        $oldData = [
+            self::CLE_LOG_USERNAME => $user->getUsername(),
+            self::CLE_LOG_IS_ACTIVE => $oldStatus,
+        ];
+
         $user->setIsActive(!$user->isActive());
         $em->flush();
-        $newData = [self::CLE_LOG_IS_ACTIVE => $user->isActive()];
+
+        $newData = [
+            self::CLE_LOG_USERNAME => $user->getUsername(),
+            self::CLE_LOG_IS_ACTIVE => $user->isActive(),
+        ];
 
         $log = new Modification();
         $log->setDate(new \DateTime());
@@ -325,9 +340,6 @@ class AdminUtilisateursController extends AbstractController
 
         $em->persist($log);
         $em->flush();
-
-        $statusText = $user->isActive() ? 'activé' : 'désactivé';
-        $this->addFlash('success', "Utilisateur {$statusText} avec succès.");
     }
 
     #[Route('/admin/utilisateurs/password', name: 'admin.utilisateurs.password', methods: ['POST'])]
@@ -341,7 +353,6 @@ class AdminUtilisateursController extends AbstractController
             self::CSRF_CONTEXT_CHANGE_PASSWORD,
             $request->request->get(self::JSON_CLE_TOKEN)
         )) {
-            $this->addFlash('error', self::MSG_CSRF_INVALIDE);
             return $this->redirectToRoute(self::ROUTE_ADMIN_UTILISATEURS);
         }
 
@@ -361,10 +372,8 @@ class AdminUtilisateursController extends AbstractController
 
         $user->setPassword($passwordHasher->hashPassword($user, $donnees['password']));
         $em->flush();
-
         $this->loggerChangementMotDePasse($em, $user, $oldData);
 
-        $this->addFlash('success', 'Mot de passe modifié avec succès.');
         return $this->redirectToRoute(self::ROUTE_ADMIN_UTILISATEURS);
     }
 
@@ -375,16 +384,13 @@ class AdminUtilisateursController extends AbstractController
         $passwordConfirm = $request->request->get('password_confirm');
 
         if ($password !== $passwordConfirm) {
-            $this->addFlash('error', 'Les mots de passe ne correspondent pas.');
             return null;
         }
 
         $user = $userRepository->find($userId);
         if (!$user) {
-            $this->addFlash('error', self::MSG_USER_INTRUVABLE);
             return null;
         }
-
         return ['userId' => $userId, 'password' => $password];
     }
 

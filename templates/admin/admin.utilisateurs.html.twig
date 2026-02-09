@@ -17,7 +17,7 @@
                 </div>
             </div>
 
-            <div class="d-flex mb-3 align-items-center justify-content-between"><!-- Partie gauche : label + select -->
+            <div class="d-flex mb-3 align-items-center justify-content-between">
                 <div class="d-flex align-items-center">
                     <label for="filterStatus" class="me-2 mb-0">Filtrer par état :</label>
                     <select id="filterStatus" class="form-select form-select-sm w-auto"
@@ -298,8 +298,8 @@
             });
 
             // ======================
-// Validation création utilisateur (username généré côté serveur)
-// ======================
+            // Validation création utilisateur (username généré côté serveur)
+            // ======================
             const addUserForm = document.getElementById('addUserForm');
             if (addUserForm) {
                 const nom = document.getElementById('nom');
@@ -396,11 +396,7 @@
                 });
             }
 
-
-
-            // ======================
             // Validation changement mot de passe
-            // ======================
             const changeModal = document.getElementById('changePasswordModal');
             if (changeModal) {
                 const changeForm = document.getElementById('changePasswordForm');
@@ -442,9 +438,7 @@
                 });
             }
 
-            // ======================
             // Modal suppression utilisateur
-            // ======================
             const deleteModal = document.getElementById('deleteUserModal');
             const deleteForm = document.getElementById('deleteUserForm');
             const adminId = document.querySelector('.card-pointage').dataset.adminId;
@@ -518,6 +512,4 @@
 
         });
     </script>
-
-
 {% endblock %}

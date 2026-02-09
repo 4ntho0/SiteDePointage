@@ -1,7 +1,5 @@
 <?php
 
-// src/Controller/AdminModificationController.php
-
 namespace App\Controller;
 
 use App\Entity\Modification;
@@ -14,7 +12,6 @@ use Symfony\Component\Routing\Annotation\Route;
 class AdminModificationController extends AbstractController
 {
     #[Route('/admin/modifications', name: 'admin.modifications')]
-    // src/Controller/AdminModificationController.php
     public function index(ModificationRepository $repo, Request $request): Response
     {
         if (!$this->getUser()) {
